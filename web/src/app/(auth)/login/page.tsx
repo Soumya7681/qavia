@@ -1,8 +1,18 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+
+import { AuthCard } from "@/components/auth/auth-card";
+import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-// The form arrives in FE-0.2.
 export default function LoginPage() {
-  return <h1 className="text-xl font-semibold">Sign in</h1>;
+  return (
+    <AuthCard title="Sign in" description="Your AI QA engineer is waiting.">
+      {/* The form reads ?next= from the URL, which is request-time. */}
+      <Suspense>
+        <LoginForm />
+      </Suspense>
+    </AuthCard>
+  );
 }

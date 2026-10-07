@@ -1,8 +1,20 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+
+import { AcceptInviteForm } from "@/components/auth/accept-invite-form";
+import { AuthCard } from "@/components/auth/auth-card";
 
 export const metadata: Metadata = { title: "Accept invitation" };
 
-// The form arrives in FE-0.2.
 export default function AcceptInvitePage() {
-  return <h1 className="text-xl font-semibold">Accept invitation</h1>;
+  return (
+    <AuthCard
+      title="Join Qavia"
+      description="Choose the name your teammates will see and a password. You will be signed in straight away."
+    >
+      <Suspense>
+        <AcceptInviteForm />
+      </Suspense>
+    </AuthCard>
+  );
 }
