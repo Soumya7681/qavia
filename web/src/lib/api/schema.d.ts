@@ -5714,6 +5714,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "complete": true,
+                     *       "adminExists": true,
+                     *       "storageReachable": true,
+                     *       "storageProvider": "local-disk",
+                     *       "storageDetail": "Writable at /var/lib/qavia/storage",
+                     *       "aiProviderConfigured": true
+                     *     }
+                     */
                     "application/json": components["schemas"]["SetupStatus"];
                 };
             };

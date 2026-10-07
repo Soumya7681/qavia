@@ -126,3 +126,19 @@ export const getPreferences = cache(async (): Promise<Preferences> => {
         : "projects",
   };
 });
+
+/**
+ * A client for public endpoints, with no session. Setup status is read before
+ * any account exists, so it is fetched this way.
+ */
+export async function publicServerApi() {
+  await connection();
+  return createApiClient({ baseUrl: apiBaseUrl });
+}
+
+/** First-run state; nothing about it is secret. */
+export const getSetupStatus = cache(async () => {
+  const client = await publicServerApi();
+  const { data } = await client.GET("/api/v1/setup/status");
+  return data!;
+});

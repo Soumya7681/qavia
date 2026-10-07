@@ -680,6 +680,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SetupStatus"
+              example:
+                complete: true
+                adminExists: true
+                storageReachable: true
+                storageProvider: local-disk
+                storageDetail: Writable at /var/lib/qavia/storage
+                aiProviderConfigured: true
         "500": { $ref: "#/components/responses/InternalError" }
 
   /api/v1/setup/admin:
