@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+
+import { ProjectList } from "@/components/projects/project-list";
 
 export const metadata: Metadata = { title: "Projects" };
 
-// The list, search, and create dialog arrive in FE-0.5.
 export default function ProjectsPage() {
-  return <h1 className="text-xl font-semibold">Projects</h1>;
+  return (
+    <Suspense>
+      <ProjectList />
+    </Suspense>
+  );
 }

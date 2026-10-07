@@ -65,7 +65,9 @@ function CategorySection({
   scope,
   projectID,
   queryKey,
+  readOnlyReason,
 }: {
+  readOnlyReason?: string;
   category: string;
   entries: SettingEntry[];
   values: Map<string, SettingValue>;
@@ -171,7 +173,12 @@ function CategorySection({
           <h2 id={`${slug(category)}-title`} className="text-sm font-semibold">
             {category}
           </h2>
-          <Button type="submit" size="sm" disabled={changed.length === 0 || update.isPending}>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={Boolean(readOnlyReason) || changed.length === 0 || update.isPending}
+            title={readOnlyReason}
+          >
             {update.isPending
               ? "Saving…"
               : changed.length > 1
@@ -179,6 +186,9 @@ function CategorySection({
                 : "Save"}
           </Button>
         </div>
+        {readOnlyReason ? (
+          <p className="border-b px-5 py-2 text-xs text-muted-foreground">{readOnlyReason}</p>
+        ) : null}
         {failure ? (
           <div className="px-5 pt-4">
             <ErrorState title="Nothing was saved" error={failure} />
@@ -225,6 +235,7 @@ function CategorySection({
                         type="button"
                         size="sm"
                         variant="outline"
+                        disabled={Boolean(readOnlyReason)}
                         onClick={() => setReplacing((s) => new Set(s).add(entry.key))}
                       >
                         {value?.secret?.isSet ? "Replace" : "Set"}
@@ -251,6 +262,7 @@ function CategorySection({
                           register={form.register}
                           invalid={Boolean(error)}
                           describedBy={help ? describedBy : undefined}
+                          disabled={Boolean(readOnlyReason)}
                         />
                       </div>
                       {isReplacing ? (
@@ -285,7 +297,7 @@ function CategorySection({
                         variant="link"
                         size="xs"
                         className="h-auto p-0 text-xs"
-                        disabled={busyKey === entry.key}
+                        disabled={Boolean(readOnlyReason) || busyKey === entry.key}
                         onClick={() => void clear(entry)}
                       >
                         <RotateCcwIcon aria-hidden /> Reset to inherited
@@ -319,7 +331,16 @@ function CategorySection({
  * is named in this file: a setting added to the Go registry appears here, with its
  * control, validation, and help, with no frontend change.
  */
-export function SettingsForm({ scope, projectID }: { scope: SettingScope; projectID?: string }) {
+export function SettingsForm({
+  scope,
+  projectID,
+  readOnlyReason,
+}: {
+  scope: SettingScope;
+  projectID?: string;
+  /** When set, every control is disabled and this says why (an archived project, say). */
+  readOnlyReason?: string;
+}) {
   const user = useCurrentUser();
   const registry = api.useQuery("get", "/api/v1/settings/registry");
   const valuesInit = projectID ? { params: { query: { projectID } } } : {};
@@ -396,6 +417,7 @@ export function SettingsForm({ scope, projectID }: { scope: SettingScope; projec
             scope={scope}
             projectID={projectID}
             queryKey={queryKey}
+            readOnlyReason={readOnlyReason}
           />
         ))}
       </div>
