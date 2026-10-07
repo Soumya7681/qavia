@@ -3,12 +3,17 @@
 import { useContext, useMemo } from "react";
 
 import { CurrentUserContext } from "@/components/auth/current-user";
+import { usePreferences } from "@/components/preferences";
 import * as format from "@/lib/format";
 
-/** The formatting helpers bound to the signed-in user's timezone. */
+/**
+ * The formatting helpers bound to the signed-in user's timezone: the
+ * `preferences.timezone` setting, falling back to the zone on their profile.
+ */
 export function useFormat() {
   const user = useContext(CurrentUserContext);
-  const timeZone = user?.timezone;
+  const preferences = usePreferences();
+  const timeZone = preferences?.timezone ?? user?.timezone;
   return useMemo(() => {
     const ctx = { timeZone };
     return {

@@ -1,4 +1,5 @@
 import { NoAccess } from "@/components/auth/no-access";
+import { RememberProject } from "@/components/shell/remember-project";
 import { getProject } from "@/lib/auth/server";
 
 // Membership is checked for the whole project subtree here, so no project page
@@ -13,5 +14,10 @@ export default async function ProjectLayout({
   if (access.denied) {
     return <NoAccess reason={access.denied} />;
   }
-  return children;
+  return (
+    <>
+      <RememberProject projectID={projectID} />
+      {children}
+    </>
+  );
 }

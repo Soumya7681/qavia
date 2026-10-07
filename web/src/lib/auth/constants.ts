@@ -5,3 +5,6 @@ export const SESSION_COOKIE = "qavia_session";
 
 /** Set by src/proxy.ts so a server component knows which page it is rendering. */
 export const PATH_HEADER = "x-qavia-path";
+
+/** The project last opened in this browser, for landing pages that are per project. */
+export const LAST_PROJECT_COOKIE = "qavia_last_project";

@@ -98,3 +98,31 @@ export const getProject = cache(async (projectID: string): Promise<ProjectAccess
     throw error;
   }
 });
+
+export type Preferences = {
+  timezone?: string;
+  theme: "system" | "light" | "dark";
+  landingPage: "projects" | "runs" | "defects" | "notifications";
+};
+
+/**
+ * The signed-in user's resolved preferences, read from the settings registry
+ * (user, then global, then default), once per request.
+ */
+export const getPreferences = cache(async (): Promise<Preferences> => {
+  const client = await serverApi();
+  const { data } = await client.GET("/api/v1/settings");
+  const value = (key: string) => data?.values.find((v) => v.key === key)?.value;
+
+  const theme = value("preferences.theme");
+  const landing = value("preferences.landing_page");
+  const timezone = value("preferences.timezone");
+  return {
+    timezone: typeof timezone === "string" && timezone ? timezone : undefined,
+    theme: theme === "light" || theme === "dark" ? theme : "system",
+    landingPage:
+      landing === "runs" || landing === "defects" || landing === "notifications"
+        ? landing
+        : "projects",
+  };
+});
