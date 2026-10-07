@@ -1,0 +1,2 @@
+// Package platform.
+package platform

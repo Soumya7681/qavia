@@ -1,0 +1,25 @@
+# oapi-codegen configuration.
+#
+# strict-server is the point of this file: it generates an interface whose methods
+# take a typed request object and return a typed response object, so a handler
+# that does not match the spec does not compile. The looser server style lets a
+# handler write any body it likes, which is exactly the drift the contract exists
+# to prevent.
+
+package: api
+output: gen/qavia.gen.go
+
+generate:
+  chi-server: true
+  strict-server: true
+  models: true
+  # The spec is embedded so the request validator middleware runs against the same
+  # bytes the client was generated from, with no file to ship or path to resolve.
+  embedded-spec: true
+
+output-options:
+  # Keeps unused component schemas in the output. They are part of the contract
+  # even before a path references them, and pruning makes the generated file churn
+  # every time a path is added.
+  skip-prune: true
+  nullable-type: true

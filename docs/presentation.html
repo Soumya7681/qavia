@@ -1,0 +1,2040 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<meta name="description" content="Qavia — internal Hyscaler AI QA platform. Architecture, data model, AI usage, providers, features, technology, delivery phases and security gates." />
+<title>Qavia — AI QA Engineer</title>
+
+<style>
+  /* ============ reset ============ */
+  html { -webkit-text-size-adjust: 100%; }
+  body, h1, h2, h3, h4, h5, p, ul, ol, dl, dd, figure, figcaption, table { margin: 0; }
+  ul, ol { padding: 0; }
+  img, svg { max-width: 100%; }
+  table { border-collapse: collapse; }
+
+  /* ============ tokens ============ */
+  :root {
+    color-scheme: light;
+
+    --ground:       #F6F8F7;
+    --surface:      #FFFFFF;
+    --sunk:         #F0F3F1;
+    --ink:          #131E1A;
+    --ink-soft:     #2E3F38;
+    --muted:        #5B6B64;
+    --faint:        #93A19A;
+    --rule:         #DBE2DE;
+    --rule-soft:    #EAEFEC;
+
+    --accent:       #0E6B52;
+    --accent-deep:  #084A38;
+    --accent-wash:  #E6F0EA;
+    --accent-line:  #C8DED3;
+
+    --risk:         #A8431A;
+    --risk-wash:    #FBEDE6;
+    --risk-line:    #EED6C8;
+
+    --f-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --f-serif: Charter, "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+    --f-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --prose: 68ch;
+    --rail: 16rem;
+    --pad: 3.6rem;
+  }
+
+  /* Deliberately single-theme: this is a light document. Hold the ground even
+     when the OS preference or the viewer's toggle asks for dark. */
+  @media (prefers-color-scheme: dark) { :root { color-scheme: light; } }
+  :root[data-theme="dark"] { color-scheme: light; }
+
+  /* ============ base ============ */
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-sans);
+    font-size: 16.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { color: var(--accent-deep); }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  code, .mono { font-family: var(--f-mono); }
+  code {
+    font-size: 0.86em;
+    background: var(--sunk);
+    border: 1px solid var(--rule-soft);
+    padding: 0.08em 0.34em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  strong { font-weight: 640; }
+
+  /* ============ shell ============ */
+  .shell {
+    display: grid;
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    max-width: 1480px;
+    margin: 0 auto;
+  }
+
+  /* ============ rail ============ */
+  .rail {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    padding: 2.6rem 1.3rem 1.8rem 2rem;
+    border-right: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+    background: var(--ground);
+  }
+
+  .wordmark { display: flex; align-items: baseline; gap: 0.55rem; }
+  .wordmark .tick {
+    width: 0.5rem; height: 0.5rem; flex: none;
+    background: var(--accent);
+    border-radius: 50%;
+    transform: translateY(-2px);
+  }
+  .wordmark .name {
+    font-family: var(--f-mono);
+    font-size: 1.08rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .wordmark .sub {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 0.645rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+    margin-top: 0.34rem;
+  }
+
+  .rail-index { display: flex; flex-direction: column; }
+
+  .rail-index a {
+    font-family: var(--f-mono);
+    font-size: 0.735rem;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0.35rem 0 0.35rem 0.8rem;
+    border-left: 2px solid var(--rule);
+    display: flex;
+    gap: 0.55rem;
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+  .rail-index a .n { color: var(--faint); font-variant-numeric: tabular-nums; flex: none; }
+  .rail-index a:hover { color: var(--ink); border-left-color: var(--faint); }
+  .rail-index a[aria-current="true"] {
+    color: var(--accent-deep);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+  .rail-index a[aria-current="true"] .n { color: var(--accent); }
+
+  .rail-foot {
+    margin-top: auto;
+    font-family: var(--f-mono);
+    font-size: 0.655rem;
+    line-height: 1.75;
+    color: var(--muted);
+  }
+  .rail-foot kbd {
+    font-family: var(--f-mono);
+    font-size: 0.95em;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    border-radius: 3px;
+    padding: 0.05em 0.32em;
+  }
+
+  /* ============ progress (narrow screens) ============ */
+  .progress { display: none; position: fixed; inset: 0 0 auto 0; height: 2px; background: var(--rule-soft); z-index: 40; }
+  .progress > i { display: block; height: 100%; width: 0; background: var(--accent); }
+
+  /* ============ main ============ */
+  main { min-width: 0; padding-bottom: 7rem; }
+
+  section { padding: 4.2rem var(--pad) 0; scroll-margin-top: 1rem; }
+  section + section { padding-top: 4.6rem; }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 0.695rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.4rem;
+  }
+  .eyebrow .n { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+
+  h1 {
+    font-family: var(--f-serif);
+    font-size: clamp(2.5rem, 5vw, 3.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.022em;
+    font-weight: 400;
+    margin-bottom: 1.3rem;
+    text-wrap: balance;
+    max-width: 22ch;
+  }
+  h2 {
+    font-family: var(--f-serif);
+    font-size: clamp(1.6rem, 2.9vw, 2.05rem);
+    line-height: 1.16;
+    letter-spacing: -0.014em;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    text-wrap: balance;
+    max-width: 32ch;
+  }
+  h3 {
+    font-family: var(--f-sans);
+    font-size: 1rem;
+    font-weight: 640;
+    letter-spacing: -0.004em;
+    margin: 2.2rem 0 0.55rem;
+  }
+  h4 {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 0.65rem;
+  }
+
+  p, .prose ul, .prose ol { max-width: var(--prose); }
+  p { margin-bottom: 1rem; }
+  .lede { font-size: 1.12rem; color: var(--ink-soft); max-width: 62ch; }
+
+  ul, ol { padding-left: 1.15rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.4rem; }
+  li::marker { color: var(--faint); }
+
+  .wide { max-width: 100%; }
+
+  /* ============ cover ============ */
+  .cover { min-height: 78vh; display: flex; flex-direction: column; justify-content: center; padding-top: 3rem; }
+  .cover .eyebrow { margin-bottom: 2rem; }
+
+  .statstrip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 2.4rem;
+  }
+  .stat { background: var(--surface); padding: 1.05rem 1.1rem 1.15rem; }
+  .stat .v {
+    font-family: var(--f-mono);
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--accent-deep);
+    font-variant-numeric: tabular-nums;
+    display: block;
+  }
+  .stat .l {
+    font-family: var(--f-mono);
+    font-size: 0.655rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    display: block;
+    line-height: 1.5;
+  }
+
+  /* ============ tables ============ */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    margin-bottom: 1.3rem;
+  }
+  table { width: 100%; font-size: 0.87rem; min-width: 34rem; }
+  th, td { text-align: left; padding: 0.58rem 0.9rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  th {
+    font-family: var(--f-mono);
+    font-size: 0.67rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--sunk);
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: #FAFCFB; }
+  td.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+
+  /* ============ chips ============ */
+  .chip {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-size: 0.655rem;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.42rem;
+    border-radius: 3px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .chip-accent { background: var(--accent-wash); color: var(--accent-deep); border-color: var(--accent-line); }
+  .chip-plain  { background: var(--sunk); color: var(--muted); border-color: var(--rule); }
+  .chip-risk   { background: var(--risk-wash); color: var(--risk); border-color: var(--risk-line); }
+
+  .effort { font-family: var(--f-mono); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; }
+  .e-s { color: var(--faint); } .e-m { color: var(--ink-soft); }
+  .e-l { color: var(--accent); } .e-xl { color: var(--risk); }
+
+  /* ============ cards ============ */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1.3rem;
+  }
+  .card { background: var(--surface); padding: 1.25rem 1.3rem 1.35rem; display: flex; flex-direction: column; gap: 0.45rem; }
+  .card .k { font-family: var(--f-mono); font-size: 0.665rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .card h3 { margin: 0; font-size: 0.98rem; }
+  .card p { margin: 0; font-size: 0.87rem; color: var(--ink-soft); max-width: none; }
+
+  /* ============ callout ============ */
+  .note {
+    border-left: 2px solid var(--accent);
+    background: var(--accent-wash);
+    padding: 0.95rem 1.15rem;
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 1.3rem;
+    max-width: var(--prose);
+  }
+  .note.risk { border-left-color: var(--risk); background: var(--risk-wash); }
+  .note h4 { color: var(--accent-deep); }
+  .note.risk h4 { color: var(--risk); }
+  .note p { font-size: 0.91rem; max-width: none; }
+  .note > :last-child { margin-bottom: 0; }
+
+  /* ============ numbered rows ============ */
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    display: grid;
+    grid-template-columns: 2.7rem minmax(0, 1fr);
+    gap: 0 1.05rem;
+    padding: 1.3rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .rows .row:last-child { border-bottom: 1px solid var(--rule); }
+  .row .rn { font-family: var(--f-mono); font-size: 0.82rem; color: var(--accent); font-variant-numeric: tabular-nums; padding-top: 0.15rem; }
+  .row h3 { margin: 0 0 0.32rem; font-size: 1rem; }
+  .row p { margin: 0 0 0.45rem; font-size: 0.91rem; max-width: 60ch; }
+  .row .meta { font-family: var(--f-mono); font-size: 0.685rem; color: var(--muted); }
+
+  /* ============ figures ============ */
+  figure { margin-bottom: 1.7rem; max-width: 100%; }
+  .fig-frame {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.5rem 1.3rem 1.1rem;
+    overflow-x: auto;
+  }
+  figure svg { height: auto; display: block; margin: 0 auto; color: var(--ink-soft); }
+  figcaption { font-size: 0.83rem; color: var(--muted); margin-top: 0.75rem; max-width: 66ch; display: flex; gap: 0.6rem; }
+  figcaption .fn {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+    padding-top: 0.09rem;
+  }
+
+  /* ============ legend ============ */
+  .legend {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    padding: 1.05rem 1.2rem 1.15rem;
+    margin-bottom: 1.6rem;
+    max-width: 100%;
+  }
+  .legend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 0.6rem 1.6rem; margin-top: 0.35rem; }
+  .lg { display: flex; align-items: center; gap: 0.6rem; font-size: 0.83rem; color: var(--ink-soft); }
+  .lg svg { flex: none; margin: 0; }
+
+  /* ============ split ============ */
+  .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 2rem; max-width: 100%; }
+  .split p, .split ul { max-width: none; }
+
+  /* ============ doc map ============ */
+  .docmap { display: flex; flex-direction: column; }
+  .docrow { display: grid; grid-template-columns: 13rem minmax(0, 1fr); gap: 0 1.3rem; padding: 0.9rem 0; border-top: 1px solid var(--rule); align-items: start; }
+  .docmap .docrow:last-child { border-bottom: 1px solid var(--rule); }
+  .docrow .f { font-family: var(--f-mono); font-size: 0.79rem; color: var(--accent-deep); font-weight: 600; }
+  .docrow .d { font-size: 0.89rem; color: var(--ink-soft); }
+  .docrow .d em { color: var(--ink); font-style: normal; font-weight: 620; }
+
+  /* ============ end ============ */
+  .end {
+    margin-top: 4.4rem;
+    padding: 2.8rem var(--pad) 0;
+    border-top: 1px solid var(--rule);
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* ============ responsive ============ */
+  @media (max-width: 940px) {
+    :root { --pad: 1.5rem; }
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .rail {
+      position: static; height: auto;
+      border-right: 0; border-bottom: 1px solid var(--rule);
+      padding: 1.4rem 1.5rem 1.2rem; gap: 1rem;
+    }
+    .rail-index { flex-direction: row; overflow-x: auto; padding-bottom: 0.2rem; }
+    .rail-index a { border-left: 0; border-bottom: 2px solid var(--rule); padding: 0.3rem 0.8rem; white-space: nowrap; }
+    .rail-index a[aria-current="true"] { border-left: 0; border-bottom-color: var(--accent); }
+    .rail-index a:hover { border-left: 0; }
+    .rail-foot { display: none; }
+    .progress { display: block; }
+    section { padding-top: 3.1rem; }
+    section + section { padding-top: 3.3rem; }
+    .cover { min-height: auto; padding-top: 1.2rem; }
+    .docrow { grid-template-columns: minmax(0, 1fr); gap: 0.2rem; }
+    th { position: static; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; animation: none !important; }
+  }
+
+  html { scroll-behavior: smooth; }
+
+  /* ============ print ============ */
+  @media print {
+    :root { --pad: 0; }
+    body { background: #fff; font-size: 10.5pt; }
+    .rail, .progress, .rail-foot { display: none !important; }
+    .shell { display: block; max-width: none; }
+    main { padding: 0; }
+    section { padding: 0 0 1.4rem; break-inside: auto; }
+    section + section { padding-top: 1.4rem; }
+    h2 { break-after: avoid; }
+    figure, .note, .card, .legend, .table-wrap { break-inside: avoid; }
+    .fig-frame, .table-wrap, .legend, .cards, .card { border-color: #bbb; }
+    tbody tr:hover td { background: transparent; }
+    .end { break-before: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true"><i id="progbar"></i></div>
+
+<div class="shell">
+
+  <!-- ================= RAIL ================= -->
+  <nav class="rail" aria-label="Sections">
+    <div class="wordmark">
+      <span class="tick" aria-hidden="true"></span>
+      <span>
+        <span class="name">Qavia</span>
+        <span class="sub">AI QA Engineer</span>
+      </span>
+    </div>
+
+    <div class="rail-index" id="railIndex">
+      <a href="#overview"><span class="n">00</span><span>Overview</span></a>
+      <a href="#flow"><span class="n">01</span><span>How it works</span></a>
+      <a href="#principles"><span class="n">02</span><span>Principles</span></a>
+      <a href="#architecture"><span class="n">03</span><span>Architecture</span></a>
+      <a href="#sequence"><span class="n">04</span><span>Request sequence</span></a>
+      <a href="#data"><span class="n">05</span><span>Data model</span></a>
+      <a href="#mechanisms"><span class="n">06</span><span>Core mechanisms</span></a>
+      <a href="#ai"><span class="n">07</span><span>Where AI runs</span></a>
+      <a href="#providers"><span class="n">08</span><span>Model providers</span></a>
+      <a href="#features"><span class="n">09</span><span>Feature modules</span></a>
+      <a href="#stack"><span class="n">10</span><span>Technology</span></a>
+      <a href="#drift"><span class="n">11</span><span>Drift &amp; maintenance</span></a>
+      <a href="#phases"><span class="n">12</span><span>Delivery</span></a>
+      <a href="#security"><span class="n">13</span><span>Security</span></a>
+      <a href="#decisions"><span class="n">14</span><span>Open decisions</span></a>
+      <a href="#docs"><span class="n">15</span><span>Document map</span></a>
+    </div>
+
+    <div class="rail-foot">
+      <kbd>J</kbd> <kbd>K</kbd> or <kbd>↑</kbd> <kbd>↓</kbd><br />
+      move between sections
+    </div>
+  </nav>
+
+  <!-- ================= MAIN ================= -->
+  <main>
+
+    <!-- 00 ============================================== -->
+    <section id="overview" class="cover">
+      <div class="eyebrow"><span class="n">00</span> Overview</div>
+
+      <h1>Upload a spec. Walk away. Come back to tested software.</h1>
+
+      <p class="lede">
+        Qavia is an internal Hyscaler platform that works like a QA engineer. It reads an
+        API specification or a repository, writes the test cases, generates runnable test
+        code, executes it in isolated containers, explains every failure, and files the
+        defect. Nobody watches a progress bar.
+      </p>
+
+      <div class="statstrip">
+        <div class="stat"><span class="v">16</span><span class="l">Phases,<br />dependency-ordered</span></div>
+        <div class="stat"><span class="v">17</span><span class="l">Feature<br />modules</span></div>
+        <div class="stat"><span class="v">9</span><span class="l">Places AI<br />is used</span></div>
+        <div class="stat"><span class="v">7</span><span class="l">Model provider<br />kinds</span></div>
+        <div class="stat"><span class="v">5</span><span class="l">Environment<br />variables total</span></div>
+        <div class="stat"><span class="v">0</span><span class="l">Required external<br />services</span></div>
+      </div>
+    </section>
+
+    <!-- 01 ============================================== -->
+    <section id="flow">
+      <div class="eyebrow"><span class="n">01</span> How it works</div>
+      <h2>The user is present for one step out of seven</h2>
+
+      <p>
+        Everything after <em>Submit</em> is a background job chain. The browser can close.
+        Each stage is independently retryable, reports progress, and is safe to run twice —
+        so a worker crash costs one retry, never a duplicate or a lost result.
+      </p>
+
+      <div class="legend">
+        <h4>How to read the diagrams</h4>
+        <div class="legend-grid">
+          <div class="lg">
+            <svg width="42" height="14" viewBox="0 0 42 14" role="img" aria-label="Solid rectangle">
+              <rect x="1" y="1" width="40" height="12" rx="2" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+            </svg>
+            <span>Component or table</span>
+          </div>
+          <div class="lg">
+            <svg width="42" height="14" viewBox="0 0 42 14" role="img" aria-label="Teal filled rectangle">
+              <rect x="1" y="1" width="40" height="12" rx="2" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+            </svg>
+            <span>Emphasised — the point being made</span>
+          </div>
+          <div class="lg">
+            <svg width="42" height="14" viewBox="0 0 42 14" role="img" aria-label="Orange filled rectangle">
+              <rect x="1" y="1" width="40" height="12" rx="2" fill="#FBEDE6" stroke="#A8431A" stroke-width="1.3" />
+            </svg>
+            <span>Security boundary or risk</span>
+          </div>
+          <div class="lg">
+            <svg width="42" height="14" viewBox="0 0 42 14" role="img" aria-label="Dashed rectangle">
+              <rect x="1" y="1" width="40" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.6" />
+            </svg>
+            <span>Zone, not a component</span>
+          </div>
+          <div class="lg">
+            <svg width="42" height="14" viewBox="0 0 42 14" role="img" aria-label="Solid arrow">
+              <line x1="2" y1="7" x2="34" y2="7" stroke="currentColor" stroke-width="1.2" />
+              <polygon points="34,3 41,7 34,11" fill="currentColor" />
+            </svg>
+            <span>Call or data flow</span>
+          </div>
+          <div class="lg">
+            <svg width="42" height="14" viewBox="0 0 42 14" role="img" aria-label="Dashed arrow">
+              <line x1="2" y1="7" x2="34" y2="7" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" />
+              <polygon points="34,3 41,7 34,11" fill="currentColor" />
+            </svg>
+            <span>Return, retry, or conditional</span>
+          </div>
+        </div>
+      </div>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 880 224" width="880" role="img" aria-label="Job pipeline: the user submits and receives an immediate acknowledgement, then ingest, extract, design, generate, execute and analyse run as a background chain ending in a notification. A dashed retry arc re-enters the chain at the failed stage.">
+            <defs>
+              <marker id="p-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+              <marker id="p-arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="#0E6B52" />
+              </marker>
+            </defs>
+
+            <!-- zone -->
+            <rect x="176" y="24" width="618" height="112" rx="5" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity="0.5" />
+            <text x="184" y="17" font-size="9.5" fill="currentColor" opacity="0.72" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.1">BACKGROUND JOB CHAIN — BROWSER MAY CLOSE</text>
+
+            <!-- submit -->
+            <rect x="8" y="54" width="120" height="52" rx="4" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+            <text x="68" y="76" text-anchor="middle" font-size="12" font-weight="600" fill="#084A38" font-family="ui-monospace, Menlo, monospace">SUBMIT</text>
+            <text x="68" y="93" text-anchor="middle" font-size="10" fill="#0E6B52">spec + test types</text>
+            <text x="68" y="124" text-anchor="middle" font-size="9.5" fill="#0E6B52" font-family="ui-monospace, Menlo, monospace">responds &lt; 500 ms</text>
+
+            <line x1="128" y1="80" x2="170" y2="80" stroke="#0E6B52" stroke-width="1.35" marker-end="url(#p-arA)" />
+            <text x="149" y="72" text-anchor="middle" font-size="9" fill="#0E6B52" font-family="ui-monospace, Menlo, monospace">202</text>
+
+            <!-- stages: x starts 190, width 92, gap 12 -->
+            <g font-family="ui-monospace, Menlo, monospace" fill="currentColor">
+              <rect x="190" y="56" width="92" height="48" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="236" y="77" text-anchor="middle" font-size="11" font-weight="600">ingest</text>
+              <text x="236" y="92" text-anchor="middle" font-size="8.5" opacity="0.72">parse · hash</text>
+
+              <rect x="294" y="56" width="92" height="48" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="340" y="77" text-anchor="middle" font-size="11" font-weight="600">extract</text>
+              <text x="340" y="92" text-anchor="middle" font-size="8.5" opacity="0.72">requirements</text>
+
+              <rect x="398" y="56" width="92" height="48" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="444" y="77" text-anchor="middle" font-size="11" font-weight="600">design</text>
+              <text x="444" y="92" text-anchor="middle" font-size="8.5" opacity="0.72">test cases</text>
+
+              <rect x="502" y="56" width="92" height="48" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="548" y="77" text-anchor="middle" font-size="11" font-weight="600">generate</text>
+              <text x="548" y="92" text-anchor="middle" font-size="8.5" opacity="0.72">test code</text>
+
+              <rect x="606" y="56" width="92" height="48" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="652" y="77" text-anchor="middle" font-size="11" font-weight="600">execute</text>
+              <text x="652" y="92" text-anchor="middle" font-size="8.5" opacity="0.72">container</text>
+
+              <rect x="710" y="56" width="76" height="48" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="748" y="77" text-anchor="middle" font-size="11" font-weight="600">analyse</text>
+              <text x="748" y="92" text-anchor="middle" font-size="8.5" opacity="0.72">failures</text>
+            </g>
+
+            <g stroke="currentColor" stroke-width="1.2" marker-end="url(#p-ar)">
+              <line x1="282" y1="80" x2="290" y2="80" />
+              <line x1="386" y1="80" x2="394" y2="80" />
+              <line x1="490" y1="80" x2="498" y2="80" />
+              <line x1="594" y1="80" x2="602" y2="80" />
+              <line x1="698" y1="80" x2="706" y2="80" />
+            </g>
+
+            <!-- notify -->
+            <line x1="786" y1="80" x2="810" y2="80" stroke="#0E6B52" stroke-width="1.35" marker-end="url(#p-arA)" />
+            <rect x="816" y="60" width="58" height="40" rx="4" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+            <text x="845" y="84" text-anchor="middle" font-size="9.5" font-weight="600" fill="#084A38" font-family="ui-monospace, Menlo, monospace">NOTIFY</text>
+
+            <!-- retry arc, below the zone so nothing overlaps -->
+            <path d="M652 148 L 652 168 L 236 168 L 236 148" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="3 3" opacity="0.62" marker-end="url(#p-ar)" />
+            <text x="444" y="188" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.75" font-family="ui-monospace, Menlo, monospace">retry re-enters at the failed stage — idempotent, never duplicates rows</text>
+            <text x="444" y="206" text-anchor="middle" font-size="9" fill="currentColor" opacity="0.55" font-family="ui-monospace, Menlo, monospace">3 attempts, exponential backoff</text>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 1</span><span>Submit returns immediately; every expensive stage runs behind the queue. A failure re-enters the chain at the stage that failed rather than restarting the whole run.</span></figcaption>
+      </figure>
+
+      <div class="cards">
+        <div class="card">
+          <span class="k">Input</span>
+          <h3>Whatever the team already has</h3>
+          <p>OpenAPI or Swagger, a Postman collection, a repository, pasted requirement text, a SQL dump. Re-uploading an unchanged file does not re-run generation.</p>
+        </div>
+        <div class="card">
+          <span class="k">Output</span>
+          <h3>Reviewable, then runnable</h3>
+          <p>Test cases land first for human approval. Only approved cases become code — Supertest, Postman, Jest, Vitest, pytest, Playwright, k6.</p>
+        </div>
+        <div class="card">
+          <span class="k">Result</span>
+          <h3>Explained, not just red</h3>
+          <p>Every failure gets a root cause, a suggested fix, and the specific log lines or source location that support it. Then a defect, in one action.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 ============================================== -->
+    <section id="principles">
+      <div class="eyebrow"><span class="n">02</span> Principles</div>
+      <h2>Six rules that outrank convenience</h2>
+
+      <p>
+        Each is owned by a document and enforced by a mechanism. Breaking one needs an
+        explicit decision, not a shortcut in a pull request.
+      </p>
+
+      <div class="rows">
+        <div class="row">
+          <div class="rn">01</div>
+          <div>
+            <h3>Configuration lives in the UI, not the environment</h3>
+            <p>
+              Five bootstrap variables exist and that is the whole <code>.env</code>:
+              database URL, Redis URL, encryption key, app URL, plus port and environment.
+              Everything else is a setting in the database, edited from a screen.
+            </p>
+            <p class="meta">Mechanism: settings registry — one declaration drives storage, validation, UI and permissions.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">02</div>
+          <div>
+            <h3>Every external platform is optional</h3>
+            <p>
+              Jira, Slack, email, GitHub, GitLab, Jenkins, S3 and every external tool server
+              are enhancements. Unconfigured is never an error — the screen reads
+              <em>Not configured — using built-in</em>.
+            </p>
+            <p class="meta">Mechanism: capability registry — built-ins register unconditionally, adapters conditionally. See Fig 8.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">03</div>
+          <div>
+            <h3>AI runs in nine places, and deliberately nowhere else</h3>
+            <p>
+              Parsing, diffing, coverage numbers, flake detection, mock responses, bulk test
+              data and security payloads are deterministic code. Reaching for a model there
+              costs money and loses repeatability.
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">04</div>
+          <div>
+            <h3>Agents ask for a tier, never a provider</h3>
+            <p>
+              Prompts reference <code>reasoning</code>, <code>code</code>,
+              <code>cheap</code> or <code>vision</code>. Settings map each tier to a real
+              model. Switching provider is a dropdown, not a deploy.
+            </p>
+            <p class="meta">Mechanism: tier resolution through a single gateway. See Fig 7.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">05</div>
+          <div>
+            <h3>Build the built-in path first, in full</h3>
+            <p>
+              Internal defect tracker before Jira. Bundled browser before an external browser
+              service. In-app notification before email. If a feature cannot work with an
+              empty integrations table, it is not finished.
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">06</div>
+          <div>
+            <h3>Traceability goes in at the foundation</h3>
+            <p>
+              Artifact checksums and versions, and the link from every test case back to its
+              requirement, ship in the first phase — before anything needs them. They are
+              what make deduplication, coverage and drift detection possible.
+            </p>
+            <p class="meta">Mechanism: the chain in Fig 4. Retrofitting it is a rewrite.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 ============================================== -->
+    <section id="architecture">
+      <div class="eyebrow"><span class="n">03</span> Architecture</div>
+      <h2>Three boundaries carry the whole design</h2>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 880 470" width="880" role="img" aria-label="Component architecture: the browser app talks only to the API, which owns all database, queue and object storage access. The Python AI service is stateless with no database connection and reaches providers through one gateway. The test runner sits in an isolated zone with no route to production.">
+            <defs>
+              <marker id="c-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+              <marker id="c-arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="#0E6B52" />
+              </marker>
+              <marker id="c-arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="#A8431A" />
+              </marker>
+            </defs>
+
+            <!-- browser -->
+            <rect x="314" y="10" width="252" height="46" rx="4" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+            <text x="440" y="31" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor" font-family="ui-monospace, Menlo, monospace">Next.js — browser</text>
+            <text x="440" y="47" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.72">settings · review · dashboards</text>
+
+            <line x1="440" y1="56" x2="440" y2="84" stroke="currentColor" stroke-width="1.2" marker-end="url(#c-ar)" />
+            <text x="448" y="74" font-size="9" fill="currentColor" opacity="0.75" font-family="ui-monospace, Menlo, monospace">HTTP + SSE</text>
+
+            <!-- API -->
+            <rect x="254" y="86" width="372" height="62" rx="4" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.4" />
+            <text x="440" y="109" text-anchor="middle" font-size="12.5" font-weight="600" fill="#084A38" font-family="ui-monospace, Menlo, monospace">Go API + worker</text>
+            <text x="440" y="125" text-anchor="middle" font-size="9.5" fill="#0E6B52">auth · settings · jobs · capability registry</text>
+            <text x="440" y="141" text-anchor="middle" font-size="9.5" font-weight="600" fill="#084A38" font-family="ui-monospace, Menlo, monospace">OWNS ALL PERSISTENCE</text>
+
+            <!-- vertical drops from API, orthogonal only -->
+            <g stroke="currentColor" stroke-width="1.1" fill="none" marker-end="url(#c-ar)">
+              <path d="M300 148 L 300 176 L 96 176 L 96 216" />
+              <path d="M370 148 L 370 190 L 270 190 L 270 216" />
+              <path d="M510 148 L 510 190 L 444 190 L 444 216" />
+            </g>
+            <text x="150" y="170" font-size="9" fill="currentColor" opacity="0.75" font-family="ui-monospace, Menlo, monospace">reads / writes</text>
+            <text x="378" y="205" font-size="9" fill="currentColor" opacity="0.75" font-family="ui-monospace, Menlo, monospace">enqueue</text>
+
+            <!-- stores row: y 218..272 -->
+            <g font-family="ui-monospace, Menlo, monospace">
+              <rect x="21" y="218" width="150" height="54" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="96" y="240" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">PostgreSQL</text>
+              <text x="96" y="256" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.72">sqlc · pgx</text>
+
+              <rect x="195" y="218" width="150" height="54" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="270" y="240" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">Redis</text>
+              <text x="270" y="256" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.72">Asynq queue</text>
+
+              <rect x="369" y="218" width="150" height="54" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="444" y="240" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">Object store</text>
+              <text x="444" y="256" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.72">disk · MinIO · S3</text>
+            </g>
+
+            <!-- AI service, right column -->
+            <rect x="618" y="196" width="242" height="80" rx="4" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+            <text x="739" y="219" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor" font-family="ui-monospace, Menlo, monospace">Python AI service</text>
+            <text x="739" y="235" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.72">LangChain · LangGraph · Pydantic</text>
+            <text x="739" y="254" text-anchor="middle" font-size="9.5" font-weight="600" fill="#A8431A" font-family="ui-monospace, Menlo, monospace">STATELESS — NO DATABASE</text>
+            <text x="739" y="268" text-anchor="middle" font-size="9" fill="currentColor" opacity="0.68">one gateway, any provider</text>
+
+            <path d="M600 148 L 739 148 L 739 192" fill="none" stroke="#0E6B52" stroke-width="1.3" marker-end="url(#c-arA)" />
+            <text x="747" y="172" font-size="9" fill="#0E6B52" font-family="ui-monospace, Menlo, monospace">typed contract</text>
+
+            <!-- providers -->
+            <rect x="638" y="322" width="202" height="40" rx="3" fill="#F0F3F1" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.85" />
+            <text x="739" y="340" text-anchor="middle" font-size="10" fill="currentColor" font-family="ui-monospace, Menlo, monospace">7 provider kinds</text>
+            <text x="739" y="354" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.7">cloud or on-premise</text>
+            <line x1="739" y1="276" x2="739" y2="318" stroke="currentColor" stroke-width="1.1" marker-end="url(#c-ar)" />
+
+            <!-- runner zone -->
+            <rect x="21" y="322" width="498" height="106" rx="5" fill="#FBEDE6" stroke="#A8431A" stroke-width="1.4" />
+            <text x="270" y="346" text-anchor="middle" font-size="11.5" font-weight="600" fill="#A8431A" font-family="ui-monospace, Menlo, monospace">Test runner — Docker + gVisor</text>
+            <text x="270" y="364" text-anchor="middle" font-size="9.5" fill="#A8431A">one-shot · non-root · read-only root filesystem · CPU, memory and time caps</text>
+            <text x="270" y="380" text-anchor="middle" font-size="9.5" fill="#A8431A">default-deny egress · metadata endpoint blocked at the network layer</text>
+            <text x="270" y="400" text-anchor="middle" font-size="9.5" font-weight="600" fill="#A8431A" font-family="ui-monospace, Menlo, monospace">SECURITY BOUNDARY — NO ROUTE TO PRODUCTION</text>
+            <text x="270" y="417" text-anchor="middle" font-size="8.5" fill="#A8431A" opacity="0.85">executes model-generated code derived from uploaded files</text>
+
+            <path d="M280 148 L 214 148 L 214 300 L 180 300 L 180 318" fill="none" stroke="#A8431A" stroke-width="1.3" marker-end="url(#c-arR)" />
+            <text x="222" y="296" font-size="9" fill="#A8431A" font-family="ui-monospace, Menlo, monospace">dispatch run</text>
+
+            <text x="440" y="452" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.62" font-family="ui-monospace, Menlo, monospace">the AI service and the runner never touch the database, or each other</text>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 2</span><span>The API is the only component holding database credentials. The AI service receives everything it needs per request. The runner is deliberately cut off from both.</span></figcaption>
+      </figure>
+
+      <div class="split">
+        <div>
+          <h4>Why the API owns persistence</h4>
+          <p>
+            One ORM, one migration history, one place invariants live. If the Python service
+            also wrote to the database we would maintain two schemas and two sets of
+            constraints that drift apart silently.
+          </p>
+        </div>
+        <div>
+          <h4>Why the runner is cut off</h4>
+          <p>
+            It executes model-generated code derived from uploaded files — arbitrary code
+            execution by design. It gets a hardened runtime, no default network, and no path
+            to anything that matters.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 ============================================== -->
+    <section id="sequence">
+      <div class="eyebrow"><span class="n">04</span> Request sequence</div>
+      <h2>Who talks to whom, in order</h2>
+
+      <p>
+        The component diagram shows what connects. This shows the ordering — in particular
+        where the acknowledgement is sent relative to the work, and how far the user is from
+        the expensive part.
+      </p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 880 486" width="880" role="img" aria-label="Sequence diagram: the user posts a specification, the API writes the project and enqueues ingest, then acknowledges. The user is then absent while a worker runs extraction and design against the AI service and a provider, writing results back to the database, before the API sends a notification.">
+            <defs>
+              <marker id="s-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+              <marker id="s-arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="#0E6B52" />
+              </marker>
+            </defs>
+
+            <!-- participants -->
+            <g font-family="ui-monospace, Menlo, monospace" font-size="10.5" font-weight="600">
+              <rect x="14" y="8" width="112" height="34" rx="4" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+              <text x="70" y="30" text-anchor="middle" fill="#084A38">User</text>
+
+              <rect x="166" y="8" width="112" height="34" rx="4" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="222" y="30" text-anchor="middle" fill="currentColor">API</text>
+
+              <rect x="318" y="8" width="112" height="34" rx="4" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="374" y="30" text-anchor="middle" fill="currentColor">Postgres</text>
+
+              <rect x="470" y="8" width="112" height="34" rx="4" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="526" y="30" text-anchor="middle" fill="currentColor">Queue</text>
+
+              <rect x="622" y="8" width="112" height="34" rx="4" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="678" y="30" text-anchor="middle" fill="currentColor">Worker</text>
+
+              <rect x="762" y="8" width="106" height="34" rx="4" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="815" y="26" text-anchor="middle" fill="currentColor" font-size="9.5">AI service</text>
+              <text x="815" y="37" text-anchor="middle" fill="currentColor" font-size="8" font-weight="400" opacity="0.72">→ provider</text>
+            </g>
+
+            <!-- lifelines -->
+            <g stroke="currentColor" stroke-width="1" stroke-dasharray="3 4" opacity="0.45">
+              <line x1="70" y1="42" x2="70" y2="452" />
+              <line x1="222" y1="42" x2="222" y2="452" />
+              <line x1="374" y1="42" x2="374" y2="452" />
+              <line x1="526" y1="42" x2="526" y2="452" />
+              <line x1="678" y1="42" x2="678" y2="452" />
+              <line x1="815" y1="42" x2="815" y2="452" />
+            </g>
+
+            <!-- messages -->
+            <g font-family="ui-monospace, Menlo, monospace" font-size="9" fill="currentColor">
+              <!-- 1 -->
+              <line x1="70" y1="66" x2="216" y2="66" stroke="#0E6B52" stroke-width="1.25" marker-end="url(#s-arA)" />
+              <text x="76" y="60" fill="#0E6B52">POST /projects — spec + test types</text>
+              <!-- 2 -->
+              <line x1="222" y1="94" x2="368" y2="94" stroke="currentColor" stroke-width="1.15" marker-end="url(#s-ar)" />
+              <text x="228" y="88">insert project, artifact (sha256)</text>
+              <!-- 3 -->
+              <line x1="222" y1="122" x2="520" y2="122" stroke="currentColor" stroke-width="1.15" marker-end="url(#s-ar)" />
+              <text x="228" y="116">enqueue ingest — idempotency key</text>
+              <!-- 4 return -->
+              <line x1="216" y1="150" x2="76" y2="150" stroke="#0E6B52" stroke-width="1.25" stroke-dasharray="3 3" marker-end="url(#s-arA)" />
+              <text x="82" y="144" fill="#0E6B52">202 Accepted + job id</text>
+            </g>
+
+            <!-- absent bracket on user lifeline -->
+            <path d="M52 162 L 44 162 L 44 402 L 52 402" fill="none" stroke="#0E6B52" stroke-width="1.2" />
+            <text x="38" y="286" text-anchor="middle" font-size="8.5" fill="#0E6B52" font-family="ui-monospace, Menlo, monospace" transform="rotate(-90 38 286)">BROWSER MAY CLOSE</text>
+
+            <g font-family="ui-monospace, Menlo, monospace" font-size="9" fill="currentColor">
+              <!-- 5 -->
+              <line x1="526" y1="182" x2="672" y2="182" stroke="currentColor" stroke-width="1.15" marker-end="url(#s-ar)" />
+              <text x="532" y="176">dequeue ingest</text>
+              <!-- 6 -->
+              <line x1="678" y1="210" x2="809" y2="210" stroke="currentColor" stroke-width="1.15" marker-end="url(#s-ar)" />
+              <text x="620" y="204" text-anchor="end">extract — tier: reasoning</text>
+              <!-- 7 self-call on AI -->
+              <path d="M815 224 L 856 224 L 856 244 L 821 244" fill="none" stroke="currentColor" stroke-width="1.1" marker-end="url(#s-ar)" />
+              <text x="852" y="260" text-anchor="end" opacity="0.8">cached prefix</text>
+              <!-- 8 return -->
+              <line x1="809" y1="278" x2="684" y2="278" stroke="currentColor" stroke-width="1.15" stroke-dasharray="3 3" marker-end="url(#s-ar)" />
+              <text x="620" y="272" text-anchor="end">requirements — schema-validated</text>
+              <!-- 9 -->
+              <line x1="678" y1="306" x2="380" y2="306" stroke="currentColor" stroke-width="1.15" marker-end="url(#s-ar)" />
+              <text x="672" y="300" text-anchor="end">write requirements + usage</text>
+              <!-- 10 -->
+              <line x1="678" y1="334" x2="532" y2="334" stroke="currentColor" stroke-width="1.15" marker-end="url(#s-ar)" />
+              <text x="672" y="328" text-anchor="end">enqueue design × N endpoints</text>
+              <!-- 11 -->
+              <line x1="526" y1="362" x2="672" y2="362" stroke="currentColor" stroke-width="1.15" marker-end="url(#s-ar)" />
+              <text x="532" y="356">dequeue design — concurrency capped</text>
+              <!-- 12 -->
+              <line x1="678" y1="390" x2="380" y2="390" stroke="currentColor" stroke-width="1.15" marker-end="url(#s-ar)" />
+              <text x="672" y="384" text-anchor="end">insert test_cases — safe to repeat</text>
+            </g>
+
+            <!-- notify -->
+            <line x1="678" y1="422" x2="228" y2="422" stroke="currentColor" stroke-width="1.15" marker-end="url(#s-ar)" />
+            <text x="672" y="416" text-anchor="end" font-size="9" fill="currentColor" font-family="ui-monospace, Menlo, monospace">chain complete</text>
+
+            <line x1="216" y1="446" x2="76" y2="446" stroke="#0E6B52" stroke-width="1.25" marker-end="url(#s-arA)" />
+            <text x="82" y="440" font-size="9" fill="#0E6B52" font-family="ui-monospace, Menlo, monospace">notification — in-app, always available</text>
+
+            <text x="440" y="474" text-anchor="middle" font-size="9" fill="currentColor" opacity="0.6" font-family="ui-monospace, Menlo, monospace">the acknowledgement is sent before any model is called</text>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 3</span><span>Message four is the whole design in one line: the user is acknowledged before a single model call happens. Everything below that bracket runs whether or not anyone is watching.</span></figcaption>
+      </figure>
+    </section>
+
+    <!-- 05 ============================================== -->
+    <section id="data">
+      <div class="eyebrow"><span class="n">05</span> Data model</div>
+      <h2>The traceability chain, and the platform around it</h2>
+
+      <p>
+        Two diagrams. The first is the chain that makes coverage and drift detection
+        possible — every generated thing knows what it came from. The second is the
+        configuration and AI machinery that surrounds it.
+      </p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 880 520" width="880" role="img" aria-label="Entity diagram of the traceability chain: a project owns artifacts, which produce requirements, which produce test cases, which are covered by test files. Runs produce run results per test case, which produce analyses, which become defects.">
+            <defs>
+              <marker id="d-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+            </defs>
+
+            <g font-family="ui-monospace, Menlo, monospace">
+              <!-- projects -->
+              <rect x="352" y="8" width="176" height="46" rx="3" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+              <text x="440" y="27" text-anchor="middle" font-size="11" font-weight="600" fill="#084A38">projects</text>
+              <text x="440" y="43" text-anchor="middle" font-size="8.5" fill="#0E6B52">id · name · owner · archived_at</text>
+
+              <!-- artifacts -->
+              <rect x="352" y="86" width="176" height="60" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="440" y="105" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">artifacts</text>
+              <text x="440" y="120" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">kind · storage_key</text>
+              <text x="440" y="135" text-anchor="middle" font-size="8.5" font-weight="600" fill="#0E6B52">sha256 · version</text>
+
+              <!-- requirements -->
+              <rect x="352" y="178" width="176" height="60" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="440" y="197" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">requirements</text>
+              <text x="440" y="212" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">kind · title · body</text>
+              <text x="440" y="227" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">source_ref</text>
+
+              <!-- test_cases -->
+              <rect x="352" y="270" width="176" height="72" rx="3" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+              <text x="440" y="289" text-anchor="middle" font-size="11" font-weight="600" fill="#084A38">test_cases</text>
+              <text x="440" y="304" text-anchor="middle" font-size="8.5" fill="#0E6B52">steps · expected · priority</text>
+              <text x="440" y="319" text-anchor="middle" font-size="8.5" font-weight="600" fill="#084A38">fingerprint</text>
+              <text x="440" y="334" text-anchor="middle" font-size="8.5" fill="#0E6B52">superseded_by</text>
+
+              <!-- test_files right -->
+              <rect x="646" y="270" width="176" height="60" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="734" y="289" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">test_files</text>
+              <text x="734" y="304" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">framework · path</text>
+              <text x="734" y="319" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">test_case_ids[]</text>
+
+              <!-- runs left -->
+              <rect x="58" y="270" width="176" height="60" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="146" y="289" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">runs</text>
+              <text x="146" y="304" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">trigger · status</text>
+              <text x="146" y="319" text-anchor="middle" font-size="8.5" font-weight="600" fill="#A8431A">target_url</text>
+
+              <!-- run_results -->
+              <rect x="352" y="374" width="176" height="60" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="440" y="393" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">run_results</text>
+              <text x="440" y="408" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">status · duration · attempt</text>
+              <text x="440" y="423" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">log · screenshot · video</text>
+
+              <!-- analyses -->
+              <rect x="58" y="374" width="176" height="60" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="146" y="393" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">analyses</text>
+              <text x="146" y="408" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">root_cause · fix · evidence</text>
+              <text x="146" y="423" text-anchor="middle" font-size="8.5" font-weight="600" fill="#0E6B52">stability_score</text>
+
+              <!-- defects -->
+              <rect x="646" y="374" width="176" height="60" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="734" y="393" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">defects</text>
+              <text x="734" y="408" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">severity · status · assignee</text>
+              <text x="734" y="423" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">external_ref · duplicate_of</text>
+            </g>
+
+            <!-- vertical spine -->
+            <g stroke="currentColor" stroke-width="1.15" marker-end="url(#d-ar)" font-family="ui-monospace, Menlo, monospace" font-size="8.5">
+              <line x1="440" y1="54" x2="440" y2="82" />
+              <line x1="440" y1="146" x2="440" y2="174" />
+              <line x1="440" y1="238" x2="440" y2="266" />
+              <line x1="440" y1="342" x2="440" y2="370" />
+            </g>
+            <g font-family="ui-monospace, Menlo, monospace" font-size="8.5" fill="currentColor" opacity="0.8">
+              <text x="448" y="72">1 → *</text>
+              <text x="448" y="164">1 → *  extract</text>
+              <text x="448" y="256">1 → *  design</text>
+              <text x="448" y="360">1 → *  per run</text>
+            </g>
+
+            <!-- test_cases → test_files -->
+            <line x1="528" y1="300" x2="640" y2="300" stroke="currentColor" stroke-width="1.15" marker-end="url(#d-ar)" />
+            <text x="584" y="293" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.8" font-family="ui-monospace, Menlo, monospace">* → *</text>
+            <text x="584" y="316" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.62" font-family="ui-monospace, Menlo, monospace">generate</text>
+
+            <!-- runs → run_results -->
+            <path d="M146 330 L 146 404 L 346 404" fill="none" stroke="currentColor" stroke-width="1.15" marker-end="url(#d-ar)" />
+            <text x="154" y="352" font-size="8.5" fill="currentColor" opacity="0.8" font-family="ui-monospace, Menlo, monospace">1 → *</text>
+
+            <!-- run_results → analyses -->
+            <path d="M352 420 L 300 420 L 300 452 L 146 452 L 146 440" fill="none" stroke="currentColor" stroke-width="1.15" marker-end="url(#d-ar)" />
+            <text x="240" y="466" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.8" font-family="ui-monospace, Menlo, monospace">1 → 0..1  on failure</text>
+
+            <!-- analyses → defects -->
+            <path d="M234 404 L 260 404 L 260 490 L 734 490 L 734 440" fill="none" stroke="currentColor" stroke-width="1.15" marker-end="url(#d-ar)" />
+            <text x="500" y="504" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.8" font-family="ui-monospace, Menlo, monospace">promoted by a human — one action</text>
+
+            <!-- test_files → run_results -->
+            <path d="M734 330 L 734 352 L 560 352 L 560 374" fill="none" stroke="currentColor" stroke-width="1.15" stroke-dasharray="3 3" opacity="0.7" marker-end="url(#d-ar)" />
+            <text x="646" y="346" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.65" font-family="ui-monospace, Menlo, monospace">executed as</text>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 4</span><span>Highlighted fields are the load-bearing ones. <code>sha256</code> and <code>version</code> make drift detection possible; <code>fingerprint</code> makes deduplication deterministic; <code>superseded_by</code> makes a wrongly-deleted case recoverable. All three ship in the first phase.</span></figcaption>
+      </figure>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 880 340" width="880" role="img" aria-label="Entity diagram of the platform tables: settings with an audit trail, provider records holding models and tier assignments, per-call accounting rows, and external tool servers with their own call log.">
+            <defs>
+              <marker id="d2-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+            </defs>
+
+            <g font-family="ui-monospace, Menlo, monospace">
+              <!-- settings group -->
+              <rect x="14" y="26" width="196" height="70" rx="3" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+              <text x="112" y="46" text-anchor="middle" font-size="11" font-weight="600" fill="#084A38">settings</text>
+              <text x="112" y="62" text-anchor="middle" font-size="8.5" fill="#0E6B52">scope · scope_id · key</text>
+              <text x="112" y="77" text-anchor="middle" font-size="8.5" fill="#0E6B52">value (json) · is_secret</text>
+              <text x="112" y="90" text-anchor="middle" font-size="8" fill="#0E6B52" opacity="0.85">unique(scope, scope_id, key)</text>
+
+              <rect x="14" y="140" width="196" height="50" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="112" y="159" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">settings_audit</text>
+              <text x="112" y="175" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">actor · old · new · at</text>
+
+              <line x1="112" y1="96" x2="112" y2="136" stroke="currentColor" stroke-width="1.15" marker-end="url(#d2-ar)" />
+              <text x="120" y="122" font-size="8.5" fill="currentColor" opacity="0.8">every write</text>
+
+              <!-- providers -->
+              <rect x="266" y="26" width="196" height="70" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="364" y="46" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">llm_providers</text>
+              <text x="364" y="62" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">kind · config · credentials</text>
+              <text x="364" y="77" text-anchor="middle" font-size="8.5" font-weight="600" fill="#A8431A">data_residency</text>
+              <text x="364" y="90" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.7">health_status</text>
+
+              <rect x="266" y="140" width="196" height="70" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="364" y="160" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">llm_models</text>
+              <text x="364" y="176" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">model_id · tiers[]</text>
+              <text x="364" y="191" text-anchor="middle" font-size="8.5" font-weight="600" fill="#0E6B52">capabilities (json)</text>
+              <text x="364" y="204" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.7">prices · token limits</text>
+
+              <line x1="364" y1="96" x2="364" y2="136" stroke="currentColor" stroke-width="1.15" marker-end="url(#d2-ar)" />
+              <text x="372" y="122" font-size="8.5" fill="currentColor" opacity="0.8">1 → *</text>
+
+              <rect x="266" y="254" width="196" height="56" rx="3" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+              <text x="364" y="274" text-anchor="middle" font-size="11" font-weight="600" fill="#084A38">tier_assignments</text>
+              <text x="364" y="290" text-anchor="middle" font-size="8.5" fill="#0E6B52">scope · tier → model</text>
+              <text x="364" y="304" text-anchor="middle" font-size="8.5" fill="#0E6B52">fallback_model · effort</text>
+
+              <line x1="364" y1="210" x2="364" y2="250" stroke="currentColor" stroke-width="1.15" marker-end="url(#d2-ar)" />
+
+              <!-- llm_calls -->
+              <rect x="518" y="140" width="196" height="70" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="616" y="160" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">llm_calls</text>
+              <text x="616" y="176" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">agent · tier · provider</text>
+              <text x="616" y="191" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">tokens · cache reads</text>
+              <text x="616" y="204" text-anchor="middle" font-size="8.5" font-weight="600" fill="#0E6B52">cost_usd · latency</text>
+
+              <line x1="462" y1="175" x2="512" y2="175" stroke="currentColor" stroke-width="1.15" marker-end="url(#d2-ar)" />
+              <text x="487" y="168" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.8">1 → *</text>
+
+              <!-- mcp -->
+              <rect x="518" y="26" width="196" height="70" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" />
+              <text x="616" y="46" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">mcp_servers</text>
+              <text x="616" y="62" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">transport · credentials</text>
+              <text x="616" y="77" text-anchor="middle" font-size="8.5" font-weight="600" fill="#A8431A">enabled_tools[]</text>
+              <text x="616" y="90" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.7">optional — may stay empty</text>
+
+              <rect x="770" y="26" width="96" height="70" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="818" y="52" text-anchor="middle" font-size="10" font-weight="600" fill="currentColor">mcp_calls</text>
+              <text x="818" y="68" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.78">tool · args</text>
+              <text x="818" y="81" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.78">redacted</text>
+
+              <line x1="714" y1="61" x2="764" y2="61" stroke="currentColor" stroke-width="1.15" marker-end="url(#d2-ar)" />
+            </g>
+
+            <text x="440" y="332" text-anchor="middle" font-size="9" fill="currentColor" opacity="0.62" font-family="ui-monospace, Menlo, monospace">every privileged write is audited; every model call is costed; nothing here is required to be populated except one provider</text>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 5</span><span>One <code>settings</code> table serves every scope, keyed by <code>(scope, scope_id, key)</code>. The dashed table is optional — the platform runs with it empty.</span></figcaption>
+      </figure>
+    </section>
+
+    <!-- 06 ============================================== -->
+    <section id="mechanisms">
+      <div class="eyebrow"><span class="n">06</span> Core mechanisms</div>
+      <h2>Four small machines the whole design rests on</h2>
+
+      <h3>Job lifecycle</h3>
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 780 232" width="780" role="img" aria-label="State machine for a job: from queued to running, then to succeeded, or to failed which retries back to queued up to three times before becoming permanently failed. Running can also be cancelled.">
+            <defs>
+              <marker id="m-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+            </defs>
+
+            <circle cx="30" cy="96" r="7" fill="currentColor" />
+            <line x1="37" y1="96" x2="72" y2="96" stroke="currentColor" stroke-width="1.2" marker-end="url(#m-ar)" />
+
+            <g font-family="ui-monospace, Menlo, monospace" font-size="11" font-weight="600">
+              <rect x="78" y="76" width="112" height="40" rx="20" fill="#FFFFFF" stroke="currentColor" stroke-width="1.1" />
+              <text x="134" y="101" text-anchor="middle" fill="currentColor">queued</text>
+
+              <rect x="246" y="76" width="112" height="40" rx="20" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.35" />
+              <text x="302" y="101" text-anchor="middle" fill="#084A38">running</text>
+
+              <rect x="424" y="20" width="122" height="40" rx="20" fill="#FFFFFF" stroke="#0E6B52" stroke-width="1.1" />
+              <text x="485" y="45" text-anchor="middle" fill="#084A38">succeeded</text>
+
+              <rect x="424" y="132" width="122" height="40" rx="20" fill="#FBEDE6" stroke="#A8431A" stroke-width="1.1" />
+              <text x="485" y="157" text-anchor="middle" fill="#A8431A">failed</text>
+
+              <rect x="612" y="132" width="140" height="40" rx="20" fill="#FFFFFF" stroke="#A8431A" stroke-width="1.35" />
+              <text x="682" y="151" text-anchor="middle" fill="#A8431A" font-size="10">permanently</text>
+              <text x="682" y="164" text-anchor="middle" fill="#A8431A" font-size="10">failed</text>
+
+              <rect x="246" y="182" width="112" height="36" rx="18" fill="#FFFFFF" stroke="currentColor" stroke-width="1.1" stroke-dasharray="3 3" />
+              <text x="302" y="205" text-anchor="middle" fill="currentColor" font-size="10">cancelled</text>
+            </g>
+
+            <g stroke="currentColor" stroke-width="1.2" marker-end="url(#m-ar)" fill="none">
+              <line x1="190" y1="96" x2="240" y2="96" />
+              <path d="M358 88 L 392 88 L 392 42 L 418 42" />
+              <path d="M358 104 L 392 104 L 392 152 L 418 152" />
+              <path d="M546 152 L 606 152" />
+              <path d="M302 116 L 302 178" />
+            </g>
+
+            <!-- retry -->
+            <path d="M424 172 L 424 200 L 134 200 L 134 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#m-ar)" />
+
+            <g font-family="ui-monospace, Menlo, monospace" font-size="8.5" fill="currentColor" opacity="0.85">
+              <text x="215" y="90" text-anchor="middle">worker picks up</text>
+              <text x="398" y="66">no error</text>
+              <text x="398" y="126">error</text>
+              <text x="576" y="145" text-anchor="middle">attempts</text>
+              <text x="576" y="157" text-anchor="middle">exhausted</text>
+              <text x="310" y="150">user</text>
+              <text x="310" y="162">cancels</text>
+              <text x="279" y="214" text-anchor="end">retry ≤ 3, exponential backoff — same idempotency key</text>
+            </g>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 6</span><span>Because the retry carries the same idempotency key, re-entering <code>running</code> cannot duplicate rows written by the earlier attempt.</span></figcaption>
+      </figure>
+
+      <h3>Two resolution cascades — and one deliberate difference</h3>
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 780 280" width="780" role="img" aria-label="Comparison of two resolution orders. A setting resolves from user to project to global to a code default. A model tier resolves from project to global and then deliberately fails with a clear message rather than falling back to a default.">
+            <defs>
+              <marker id="r-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+              <marker id="r-arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="#A8431A" />
+              </marker>
+            </defs>
+
+            <text x="16" y="20" font-size="10" font-weight="600" fill="currentColor" font-family="ui-monospace, Menlo, monospace">A · SETTING VALUE</text>
+            <text x="16" y="164" font-size="10" font-weight="600" fill="currentColor" font-family="ui-monospace, Menlo, monospace">B · MODEL TIER</text>
+
+            <!-- A row -->
+            <g font-family="ui-monospace, Menlo, monospace" font-size="10">
+              <rect x="16" y="36" width="122" height="38" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="77" y="60" text-anchor="middle" fill="currentColor">user</text>
+
+              <rect x="186" y="36" width="122" height="38" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="247" y="60" text-anchor="middle" fill="currentColor">project</text>
+
+              <rect x="356" y="36" width="122" height="38" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="417" y="60" text-anchor="middle" fill="currentColor">global</text>
+
+              <rect x="526" y="36" width="152" height="38" rx="3" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+              <text x="602" y="60" text-anchor="middle" fill="#084A38">registry default</text>
+            </g>
+            <g stroke="currentColor" stroke-width="1.2" marker-end="url(#r-ar)">
+              <line x1="138" y1="55" x2="180" y2="55" />
+              <line x1="308" y1="55" x2="350" y2="55" />
+              <line x1="478" y1="55" x2="520" y2="55" />
+            </g>
+            <g font-family="ui-monospace, Menlo, monospace" font-size="8" fill="currentColor" opacity="0.75">
+              <text x="159" y="48" text-anchor="middle">unset</text>
+              <text x="329" y="48" text-anchor="middle">unset</text>
+              <text x="499" y="48" text-anchor="middle">unset</text>
+            </g>
+            <text x="16" y="106" font-size="9" fill="currentColor" opacity="0.8" font-family="ui-monospace, Menlo, monospace">first value found wins — there is always an answer</text>
+            <text x="16" y="126" font-size="9" fill="currentColor" opacity="0.62" font-family="ui-monospace, Menlo, monospace">an undeclared key is a runtime error, never a silent undefined</text>
+
+            <line x1="16" y1="142" x2="764" y2="142" stroke="currentColor" stroke-width="1" opacity="0.28" />
+
+            <!-- B row -->
+            <g font-family="ui-monospace, Menlo, monospace" font-size="10">
+              <rect x="16" y="180" width="122" height="38" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="77" y="204" text-anchor="middle" fill="currentColor">project</text>
+
+              <rect x="186" y="180" width="122" height="38" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="247" y="204" text-anchor="middle" fill="currentColor">global</text>
+
+              <rect x="356" y="180" width="322" height="38" rx="3" fill="#FBEDE6" stroke="#A8431A" stroke-width="1.3" />
+              <text x="517" y="198" text-anchor="middle" fill="#A8431A" font-size="9.5" font-weight="600">FAIL AT ENQUEUE — no default</text>
+              <text x="517" y="211" text-anchor="middle" fill="#A8431A" font-size="8">“No model assigned to the reasoning tier. Configure it in Settings.”</text>
+            </g>
+            <g stroke="currentColor" stroke-width="1.2" marker-end="url(#r-ar)">
+              <line x1="138" y1="199" x2="180" y2="199" />
+            </g>
+            <line x1="308" y1="199" x2="350" y2="199" stroke="#A8431A" stroke-width="1.2" marker-end="url(#r-arR)" />
+            <g font-family="ui-monospace, Menlo, monospace" font-size="8" fill="currentColor" opacity="0.75">
+              <text x="159" y="192" text-anchor="middle">unset</text>
+            </g>
+            <text x="329" y="192" text-anchor="middle" font-size="8" fill="#A8431A">unset</text>
+
+            <text x="16" y="250" font-size="9" fill="#A8431A" font-family="ui-monospace, Menlo, monospace">deliberately no silent fallback: the user learns on submit, not from a job that dies later</text>
+            <text x="16" y="268" font-size="9" fill="currentColor" opacity="0.62" font-family="ui-monospace, Menlo, monospace">a wrong-but-working default would quietly bill the wrong model</text>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 7</span><span>Same shape, opposite ending. Settings always resolve to something; a missing tier assignment is an error the user sees immediately. That asymmetry is a decision, not an oversight.</span></figcaption>
+      </figure>
+
+      <h3>Why every integration can be optional</h3>
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 780 300" width="780" role="img" aria-label="The capability registry: at boot the built-in implementation registers unconditionally while an external adapter registers only if its settings are valid. At run time application code resolves the capability from the registry and never checks whether a specific vendor is configured.">
+            <defs>
+              <marker id="k-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+              <marker id="k-arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="#0E6B52" />
+              </marker>
+            </defs>
+
+            <text x="16" y="18" font-size="9.5" font-weight="600" fill="currentColor" opacity="0.8" font-family="ui-monospace, Menlo, monospace" letter-spacing="1">AT BOOT</text>
+
+            <g font-family="ui-monospace, Menlo, monospace">
+              <rect x="16" y="30" width="196" height="50" rx="3" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+              <text x="114" y="50" text-anchor="middle" font-size="10.5" font-weight="600" fill="#084A38">Built-in defect tracker</text>
+              <text x="114" y="66" text-anchor="middle" font-size="8.5" fill="#0E6B52">registers unconditionally</text>
+
+              <rect x="16" y="98" width="196" height="58" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" />
+              <text x="114" y="118" text-anchor="middle" font-size="10.5" font-weight="600" fill="currentColor">Jira adapter</text>
+              <text x="114" y="133" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">registers only if</text>
+              <text x="114" y="146" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">settings present and valid</text>
+
+              <!-- registry -->
+              <rect x="304" y="42" width="168" height="102" rx="4" fill="#FFFFFF" stroke="currentColor" stroke-width="1.2" />
+              <text x="388" y="66" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">DefectTracker</text>
+              <text x="388" y="80" text-anchor="middle" font-size="9.5" fill="currentColor" opacity="0.8">registry</text>
+              <line x1="320" y1="92" x2="456" y2="92" stroke="currentColor" stroke-width="1" opacity="0.35" />
+              <text x="388" y="108" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">create · update</text>
+              <text x="388" y="122" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">link duplicate · assign</text>
+              <text x="388" y="136" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.6">one interface</text>
+            </g>
+
+            <line x1="212" y1="55" x2="298" y2="72" stroke="#0E6B52" stroke-width="1.3" marker-end="url(#k-arA)" />
+            <line x1="212" y1="127" x2="298" y2="112" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#k-ar)" />
+
+            <text x="16" y="188" font-size="9.5" font-weight="600" fill="currentColor" opacity="0.8" font-family="ui-monospace, Menlo, monospace" letter-spacing="1">AT RUN TIME</text>
+
+            <g font-family="ui-monospace, Menlo, monospace">
+              <rect x="16" y="200" width="252" height="52" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="142" y="220" text-anchor="middle" font-size="10.5" font-weight="600" fill="currentColor">Analysis service</text>
+              <text x="142" y="238" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">“file a defect for this failure”</text>
+
+              <rect x="360" y="200" width="196" height="52" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1.2" />
+              <text x="458" y="220" text-anchor="middle" font-size="10" font-weight="600" fill="currentColor">registry.resolve()</text>
+              <text x="458" y="238" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">returns whichever is active</text>
+
+              <rect x="620" y="200" width="146" height="52" rx="3" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.3" />
+              <text x="693" y="220" text-anchor="middle" font-size="10" font-weight="600" fill="#084A38">defect filed</text>
+              <text x="693" y="238" text-anchor="middle" font-size="8.5" fill="#0E6B52">always works</text>
+            </g>
+
+            <line x1="268" y1="226" x2="354" y2="226" stroke="currentColor" stroke-width="1.2" marker-end="url(#k-ar)" />
+            <line x1="556" y1="226" x2="614" y2="226" stroke="#0E6B52" stroke-width="1.3" marker-end="url(#k-arA)" />
+
+            <text x="16" y="278" font-size="9" fill="#A8431A" font-family="ui-monospace, Menlo, monospace">the calling code never writes “if Jira is configured” — that check exists in exactly one place</text>
+            <text x="16" y="294" font-size="9" fill="currentColor" opacity="0.62" font-family="ui-monospace, Menlo, monospace">remove the Jira settings and the registry silently falls back; a Jira outage degrades the same way</text>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 8</span><span>The same shape covers notifications, storage, source access, run triggering and browser control. Adding a vendor means one type satisfying one interface, plus one registration line in main.go — no service or handler changes.</span></figcaption>
+      </figure>
+    </section>
+
+    <!-- 07 ============================================== -->
+    <section id="ai">
+      <div class="eyebrow"><span class="n">07</span> Where AI runs</div>
+      <h2>Nine places — and a longer list where it is banned</h2>
+
+      <p>
+        The second list matters as much as the first. It is where teams building this kind of
+        product burn budget and lose repeatability by reaching for a model when a parser
+        would do.
+      </p>
+
+      <h3>The nine</h3>
+      <div class="table-wrap wide">
+        <table>
+          <thead>
+            <tr><th>#</th><th>What it does</th><th>Tier</th><th>Tools</th><th>Schema-locked</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">1</td><td>Requirement extraction — features, business rules, validation, auth model</td><td><span class="chip chip-accent">reasoning</span></td><td>—</td><td>Yes</td></tr>
+            <tr><td class="mono">2</td><td>Test case design — happy path, negatives, boundaries, auth states</td><td><span class="chip chip-accent">reasoning</span></td><td>—</td><td>Yes</td></tr>
+            <tr><td class="mono">3</td><td>Semantic dedupe — are two differently-worded cases the same case</td><td><span class="chip chip-plain">cheap</span></td><td>—</td><td>Yes</td></tr>
+            <tr><td class="mono">4</td><td>API test code generation</td><td><span class="chip chip-plain">code</span></td><td>—</td><td>Code out</td></tr>
+            <tr><td class="mono">5</td><td>Failure analysis — root cause, fix, evidence</td><td><span class="chip chip-accent">reasoning</span></td><td>file read, git blame</td><td>Yes</td></tr>
+            <tr><td class="mono">6</td><td>Repository comprehension — uncovered paths, service layer</td><td><span class="chip chip-plain">code</span></td><td>file, grep, glob</td><td>Yes</td></tr>
+            <tr><td class="mono">7</td><td>Unit test generation</td><td><span class="chip chip-plain">code</span></td><td>file read</td><td>Code out</td></tr>
+            <tr><td class="mono">8</td><td>UI flow discovery — drives a real browser, then writes specs</td><td><span class="chip chip-plain">code</span> <span class="chip chip-plain">vision</span></td><td>browser</td><td>Flow: yes</td></tr>
+            <tr><td class="mono">9</td><td>Maintenance decision — regenerate, mark stale, or delete</td><td><span class="chip chip-accent">reasoning</span></td><td>—</td><td>Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Deliberately not AI</h3>
+      <div class="table-wrap wide">
+        <table>
+          <thead><tr><th>Task</th><th>How it is actually done</th></tr></thead>
+          <tbody>
+            <tr><td>Parse OpenAPI</td><td>A real parser. A model is never asked to read JSON structure.</td></tr>
+            <tr><td>Diff two spec versions</td><td>Structural diff on the parsed tree. Exact, instant, free. AI only interprets a diff it is handed.</td></tr>
+            <tr><td>Detect the project's framework</td><td>Read the manifest and lockfiles.</td></tr>
+            <tr><td>Coverage numbers</td><td>The language's own coverage tool. Never a model estimate.</td></tr>
+            <tr><td>Confidence score</td><td>Re-run stability, or overlap with recent commits. <strong>Never a model's self-report.</strong></td></tr>
+            <tr><td>Flake detection</td><td>Re-run and count result changes. Arithmetic.</td></tr>
+            <tr><td>Mock server responses</td><td>Generated from the response schema.</td></tr>
+            <tr><td>Bulk test data</td><td>Seeded faker. A model only handles semantically tricky fields.</td></tr>
+            <tr><td>Security payloads</td><td>A curated library. The model picks <em>where</em> to probe; it does not invent payloads.</td></tr>
+            <tr><td>Cost accounting</td><td>Summing rows.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <h4>The confidence-score decision</h4>
+        <p>
+          The original sketch showed <em>Confidence 92%</em> on each failure analysis. A model
+          asked how sure it is produces a number with nothing behind it, and showing it
+          invites decisions it cannot support. It is replaced by a stability score derived
+          from something measurable — or no number at all.
+        </p>
+      </div>
+    </section>
+
+    <!-- 08 ============================================== -->
+    <section id="providers">
+      <div class="eyebrow"><span class="n">08</span> Model providers</div>
+      <h2>Any provider, chosen from a screen</h2>
+
+      <p>
+        Seven provider kinds, all configured in the UI. The last is what makes
+        <em>any provider</em> real: one adapter speaks the widely-copied OpenAI request
+        shape, covering self-hosted Ollama and vLLM plus most gateways.
+      </p>
+
+      <div class="split">
+        <div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Kind</th><th>Reaches</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">anthropic</td><td>Claude, directly</td></tr>
+                <tr><td class="mono">bedrock</td><td>Claude and others on AWS</td></tr>
+                <tr><td class="mono">vertex</td><td>Claude and Gemini on Google Cloud</td></tr>
+                <tr><td class="mono">openai</td><td>OpenAI</td></tr>
+                <tr><td class="mono">azure-openai</td><td>OpenAI models on Azure</td></tr>
+                <tr><td class="mono">gemini</td><td>Google AI Studio</td></tr>
+                <tr><td class="mono">openai-compatible</td><td><strong>Anything</strong> speaking that shape</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h4>Capability matrix, not assumptions</h4>
+          <p>
+            Providers are not interchangeable. Each model records whether it supports tool
+            use, vision, native structured output, and which style of prompt caching. A model
+            without tool use cannot serve the agents that read files or drive a browser, and
+            the interface explains why rather than letting someone pick it and hit a failure
+            at run time.
+          </p>
+          <p>
+            A <em>Test connection</em> probe checks what actually works and overwrites what
+            was declared. Detected beats documented.
+          </p>
+        </div>
+      </div>
+
+      <h3>How data residency is enforced</h3>
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 780 262" width="780" role="img" aria-label="Residency enforcement: a job for a project approved for external AI may use a cloud provider, while a project not approved is restricted by a server-side check to providers running on Hyscaler hardware. The check happens before the job is queued.">
+            <defs>
+              <marker id="z-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+              <marker id="z-arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="#0E6B52" />
+              </marker>
+              <marker id="z-arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="#A8431A" />
+              </marker>
+            </defs>
+
+            <g font-family="ui-monospace, Menlo, monospace">
+              <rect x="16" y="60" width="150" height="76" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="91" y="82" text-anchor="middle" font-size="10.5" font-weight="600" fill="currentColor">AI job request</text>
+              <text x="91" y="99" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">project + tier</text>
+              <text x="91" y="115" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">spec, source code</text>
+              <text x="91" y="129" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.62">client material</text>
+
+              <!-- gate -->
+              <rect x="222" y="52" width="176" height="92" rx="3" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.4" />
+              <text x="310" y="76" text-anchor="middle" font-size="10.5" font-weight="600" fill="#084A38">server-side check</text>
+              <text x="310" y="93" text-anchor="middle" font-size="8.5" fill="#0E6B52">external_ai_approved?</text>
+              <text x="310" y="109" text-anchor="middle" font-size="8.5" fill="#0E6B52">provider residency?</text>
+              <text x="310" y="128" text-anchor="middle" font-size="8" font-weight="600" fill="#084A38">BEFORE ENQUEUE</text>
+              <text x="310" y="139" text-anchor="middle" font-size="7.5" fill="#0E6B52" opacity="0.85">not a hint in the interface</text>
+
+              <!-- approved path -->
+              <rect x="470" y="20" width="290" height="56" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="615" y="41" text-anchor="middle" font-size="10" font-weight="600" fill="currentColor">approved — any provider</text>
+              <text x="615" y="58" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.78">Claude · Bedrock in-region · OpenAI · Gemini</text>
+              <text x="615" y="70" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.6">strongest extraction and analysis quality</text>
+
+              <!-- restricted path -->
+              <rect x="470" y="120" width="290" height="56" rx="3" fill="#FBEDE6" stroke="#A8431A" stroke-width="1.3" />
+              <text x="615" y="141" text-anchor="middle" font-size="10" font-weight="600" fill="#A8431A">not approved — on-premise only</text>
+              <text x="615" y="158" text-anchor="middle" font-size="8.5" fill="#A8431A">Ollama or vLLM on Hyscaler hardware</text>
+              <text x="615" y="170" text-anchor="middle" font-size="8" fill="#A8431A" opacity="0.85">materially weaker — recorded on every artifact</text>
+            </g>
+
+            <line x1="166" y1="98" x2="216" y2="98" stroke="currentColor" stroke-width="1.2" marker-end="url(#z-ar)" />
+            <path d="M398 80 L 434 80 L 434 48 L 464 48" fill="none" stroke="#0E6B52" stroke-width="1.3" marker-end="url(#z-arA)" />
+            <path d="M398 116 L 434 116 L 434 148 L 464 148" fill="none" stroke="#A8431A" stroke-width="1.3" marker-end="url(#z-arR)" />
+
+            <text x="440" y="66" font-size="8" fill="#0E6B52" font-family="ui-monospace, Menlo, monospace">yes</text>
+            <text x="440" y="134" font-size="8" fill="#A8431A" font-family="ui-monospace, Menlo, monospace">no</text>
+
+            <text x="16" y="212" font-size="9" fill="currentColor" opacity="0.8" font-family="ui-monospace, Menlo, monospace">a client who refuses outside processing gets a local model, not a refusal to serve them</text>
+            <text x="16" y="230" font-size="9" fill="currentColor" opacity="0.62" font-family="ui-monospace, Menlo, monospace">the platform cannot send that project's code anywhere else — enforcement, not policy</text>
+            <text x="16" y="250" font-size="9" fill="#A8431A" font-family="ui-monospace, Menlo, monospace">the quality trade-off is real and should be stated to the client, not papered over</text>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 9</span><span>Client repositories and specifications are usually under NDA, so this turns a blocking legal question into a configuration choice — without letting anyone opt out of it by accident.</span></figcaption>
+      </figure>
+
+      <div class="note risk">
+        <h4>The cost trap worth knowing about</h4>
+        <p>
+          One specification fans out into a call per endpoint, all sharing the same prefix.
+          Prompt caching is what makes that affordable — and providers implement it in four
+          incompatible ways, from explicit markers to fully automatic to none at all. The same
+          forty-endpoint spec can differ by roughly an order of magnitude in cost depending on
+          the provider. So the estimate shown before submitting is computed from that
+          provider's real behaviour, and a standing test asserts the shared prefix stays
+          byte-identical. A stray timestamp in a prompt silently destroys the saving.
+        </p>
+      </div>
+    </section>
+
+    <!-- 09 ============================================== -->
+    <section id="features">
+      <div class="eyebrow"><span class="n">09</span> Feature modules</div>
+      <h2>Seventeen modules, and which are built in</h2>
+
+      <div class="table-wrap wide">
+        <table>
+          <thead><tr><th>Module</th><th>Covers</th><th>Availability</th></tr></thead>
+          <tbody>
+            <tr><td>Platform &amp; access</td><td>Login, roles, projects, settings registry, capability registry</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Job pipeline</td><td>Queue, chaining, progress, retries, cancellation, scheduler</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Input &amp; ingestion</td><td>Specs, collections, archives, repositories, SQL dumps, checksums</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Understanding</td><td>Requirement extraction, review screen, repository comprehension</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Test case management</td><td>Design, dedupe, edit, approve, traceability, cost estimate</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Code generation</td><td>API, unit, UI, performance, security; selector policy enforced in code</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Execution</td><td>Isolated runs, limits, allowlisting, artifacts, flake detection</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>UI flow discovery</td><td>Real browser exploration, flow graph, screenshot understanding</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Analysis &amp; defects</td><td>Root cause with evidence, stability score, internal defect tracker</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Test data &amp; mocking</td><td>Schema-driven data, boundary sets, mock server with fault injection</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Performance &amp; security</td><td>Load scripts, probe library, per-project approval and host confirmation</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Reporting</td><td>Dashboard, two separate coverage metrics, exports, spend</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>External integrations</td><td>Jira, GitHub, GitLab, Slack, Jenkins, email, external tool servers</td><td><span class="chip chip-plain">optional</span></td></tr>
+            <tr><td>Notifications</td><td>In-app centre always on; email and chat if configured</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Maintenance &amp; drift</td><td>Re-ingest, structural diff, per-case decision, approval, history</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>AI configuration</td><td>Providers, models, tiers, budget, residency enforcement</td><td><span class="chip chip-accent">built-in</span></td></tr>
+            <tr><td>Audit &amp; governance</td><td>Privileged-action log, runner commands, retention</td><td><span class="chip chip-accent">built-in</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <h4>Two coverage numbers, never one</h4>
+        <p>
+          The original sketch showed a single <em>Coverage 91%</em>. Requirement coverage and
+          code coverage measure different things and routinely diverge, so they are shown as
+          two separately-labelled metrics. Code coverage appears only when a repository is
+          connected, rather than being guessed at.
+        </p>
+      </div>
+    </section>
+
+    <!-- 10 ============================================== -->
+    <section id="stack">
+      <div class="eyebrow"><span class="n">10</span> Technology</div>
+      <h2>Every choice has a stated cost</h2>
+
+      <div class="table-wrap wide">
+        <table>
+          <thead><tr><th>Layer</th><th>Choice</th></tr></thead>
+          <tbody>
+            <tr><td>Repository</td><td class="mono">web/ · api/ (Go module) · services/ai/ · one Makefile</td></tr>
+            <tr><td>Frontend</td><td class="mono">Next.js App Router · Tailwind · shadcn/ui · TanStack Query</td></tr>
+            <tr><td>API + worker</td><td class="mono">Go · net/http + chi · two binaries</td></tr>
+            <tr><td>API contract</td><td class="mono">OpenAPI 3.1, spec-first · oapi-codegen · openapi-typescript</td></tr>
+            <tr><td>AI service</td><td class="mono">Python + FastAPI</td></tr>
+            <tr><td>AI orchestration</td><td class="mono">LangChain + LangGraph + Pydantic</td></tr>
+            <tr><td>Database</td><td class="mono">PostgreSQL · sqlc over pgx v5 · goose migrations</td></tr>
+            <tr><td>Queue</td><td class="mono">Asynq on Redis</td></tr>
+            <tr><td>Storage</td><td class="mono">local disk · MinIO · S3</td></tr>
+            <tr><td>Test execution</td><td class="mono">Docker + gVisor via the official Docker Go SDK</td></tr>
+            <tr><td>Spec parsing + diff</td><td class="mono">pb33f/libopenapi</td></tr>
+            <tr><td>Auth</td><td class="mono">local login, server-side sessions (scs), Argon2id</td></tr>
+            <tr><td>Observability</td><td class="mono">log/slog + OpenTelemetry</td></tr>
+            <tr><td>Testing</td><td class="mono">go test -race · testify · testcontainers-go · Playwright · pytest</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The one choice that needs defending: three languages</h3>
+      <p>
+        One language would be simpler. Two forces pull against that, in opposite directions.
+      </p>
+      <p>
+        <strong>Python, for the AI service.</strong> Getting a model to return a guaranteed
+        shape works four different ways across providers, and the Python libraries normalise
+        all four while every other ecosystem lags on exactly that surface. Writing and
+        maintaining that ourselves across seven provider kinds is substantial work and a
+        permanent source of bugs.
+      </p>
+      <p>
+        <strong>Go, for the API, the worker and the runner.</strong> The runner is the largest
+        phase and a security boundary, and Docker, containerd, gVisor and Firecracker are all
+        written in Go with first-party Go SDKs. Bounded fan-out and concurrent container runs
+        are a semaphore rather than a queue configuration trick. sqlc checks every query
+        against the real schema at compile time, which removes the awkward-aggregate and
+        untyped-JSON costs an ORM would have carried. One static binary per process suits a
+        single-VM deployment.
+      </p>
+      <p>
+        <strong>What it costs:</strong> three toolchains, and no shared types between the web
+        app and the API. Four rules keep it contained:
+      </p>
+      <ul>
+        <li>The <strong>OpenAPI specification is written first</strong> and both the Go server and the TypeScript client are generated from it. Neither side hand-writes a request type.</li>
+        <li>The Python service is <strong>stateless and never touches the database</strong>.</li>
+        <li>The Go to Python boundary is the <strong>same generated-contract mechanism</strong> — a breaking change fails the build, not production.</li>
+        <li>The Python service holds <strong>no business logic</strong>. It runs agents; the API decides everything else.</li>
+      </ul>
+
+      <div class="note">
+        <h4>What the query layer buys, and the one thing it costs</h4>
+        <p>
+          sqlc generates Go from real SQL checked against the migrated schema, so a column
+          rename breaks the build rather than a request. Aggregates like requirement coverage
+          and spend-by-provider are ordinary queries, <code>jsonb</code> columns unmarshal into
+          named types, and lazy-relation N+1 is not reachable. The cost is dynamic filtering:
+          a list endpoint with optional filters is built with <code>squirrel</code> inside the
+          store, parameterised, with an integration test, because that is the one query the
+          compiler is not checking.
+        </p>
+      </div>
+    </section>
+
+    <!-- 11 ============================================== -->
+    <section id="drift">
+      <div class="eyebrow"><span class="n">11</span> Drift &amp; maintenance</div>
+      <h2>Generating tests once is table stakes</h2>
+
+      <p>
+        Keeping them correct as the system changes is what teams actually pay for. Note where
+        the model appears in this chain — and where it deliberately does not.
+      </p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 880 268" width="880" role="img" aria-label="Drift pipeline: a new specification version is compared by checksum, structurally diffed, and each change classified — all deterministic code. Only then does a model decide per affected test case, and a human approves before anything is applied. Replaced cases are retained in history.">
+            <defs>
+              <marker id="dr-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="currentColor" />
+              </marker>
+              <marker id="dr-arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <polygon points="0,1 10,5 0,9" fill="#0E6B52" />
+              </marker>
+            </defs>
+
+            <!-- deterministic zone -->
+            <rect x="10" y="44" width="470" height="88" rx="5" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity="0.5" />
+            <text x="18" y="37" font-size="9" fill="currentColor" opacity="0.75" font-family="ui-monospace, Menlo, monospace" letter-spacing="1">DETERMINISTIC CODE — EXACT, INSTANT, FREE</text>
+
+            <g font-family="ui-monospace, Menlo, monospace">
+              <rect x="22" y="62" width="100" height="52" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="72" y="83" text-anchor="middle" font-size="10" font-weight="600" fill="currentColor">spec v2</text>
+              <text x="72" y="99" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.75">re-uploaded</text>
+
+              <rect x="146" y="62" width="100" height="52" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="196" y="83" text-anchor="middle" font-size="10" font-weight="600" fill="currentColor">hash</text>
+              <text x="196" y="99" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.75">changed?</text>
+
+              <rect x="270" y="62" width="100" height="52" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="320" y="83" text-anchor="middle" font-size="10" font-weight="600" fill="currentColor">tree diff</text>
+              <text x="320" y="99" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.75">structural</text>
+
+              <rect x="380" y="62" width="88" height="52" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+              <text x="424" y="79" text-anchor="middle" font-size="10" font-weight="600" fill="currentColor">classify</text>
+              <text x="424" y="93" text-anchor="middle" font-size="7.5" fill="currentColor" opacity="0.75">added · removed</text>
+              <text x="424" y="104" text-anchor="middle" font-size="7.5" fill="currentColor" opacity="0.75">signature · semantics</text>
+
+              <!-- AI step -->
+              <rect x="516" y="52" width="152" height="72" rx="3" fill="#E6F0EA" stroke="#0E6B52" stroke-width="1.4" />
+              <text x="592" y="74" text-anchor="middle" font-size="10.5" font-weight="600" fill="#084A38">model decides</text>
+              <text x="592" y="90" text-anchor="middle" font-size="8.5" fill="#0E6B52">per affected case</text>
+              <text x="592" y="105" text-anchor="middle" font-size="8" fill="#0E6B52">regenerate · stale · delete</text>
+              <text x="592" y="117" text-anchor="middle" font-size="7.5" fill="#0E6B52" opacity="0.85">reads the diff, not the files</text>
+
+              <!-- human -->
+              <rect x="712" y="52" width="152" height="72" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1.2" />
+              <text x="788" y="74" text-anchor="middle" font-size="10.5" font-weight="600" fill="currentColor">human approves</text>
+              <text x="788" y="90" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="0.8">nothing applied before this</text>
+              <text x="788" y="106" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.7">reject leaves everything</text>
+              <text x="788" y="117" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.7">exactly as it was</text>
+            </g>
+
+            <g stroke="currentColor" stroke-width="1.2" marker-end="url(#dr-ar)">
+              <line x1="122" y1="88" x2="140" y2="88" />
+              <line x1="246" y1="88" x2="264" y2="88" />
+              <line x1="370" y1="88" x2="376" y2="88" />
+            </g>
+            <line x1="468" y1="88" x2="510" y2="88" stroke="#0E6B52" stroke-width="1.3" marker-end="url(#dr-arA)" />
+            <line x1="668" y1="88" x2="706" y2="88" stroke="currentColor" stroke-width="1.2" marker-end="url(#dr-ar)" />
+
+            <!-- history -->
+            <rect x="712" y="170" width="152" height="52" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="1" />
+            <text x="788" y="191" text-anchor="middle" font-size="10" font-weight="600" fill="currentColor" font-family="ui-monospace, Menlo, monospace">history retained</text>
+            <text x="788" y="207" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.75" font-family="ui-monospace, Menlo, monospace">superseded_by — restorable</text>
+            <line x1="788" y1="124" x2="788" y2="166" stroke="currentColor" stroke-width="1.2" marker-end="url(#dr-ar)" />
+
+            <text x="10" y="176" font-size="9" fill="currentColor" opacity="0.8" font-family="ui-monospace, Menlo, monospace">the diff is code, so it is repeatable and costs nothing — the model only interprets it</text>
+            <text x="10" y="196" font-size="9" fill="currentColor" opacity="0.62" font-family="ui-monospace, Menlo, monospace">change a required field, and exactly the affected cases are flagged — nothing else</text>
+            <text x="10" y="220" font-size="9" fill="#0E6B52" font-family="ui-monospace, Menlo, monospace">a scheduled check polls connected specs and repositories, then notifies on drift</text>
+            <text x="10" y="252" font-size="9" fill="currentColor" opacity="0.55" font-family="ui-monospace, Menlo, monospace">this depends on artifact versioning and requirement links shipped in the first phase</text>
+          </svg>
+        </div>
+        <figcaption><span class="fn">Fig 10</span><span>Four deterministic steps, one model step, one human gate. Putting the model at step five instead of step one is what makes this cheap and repeatable.</span></figcaption>
+      </figure>
+    </section>
+
+    <!-- 12 ============================================== -->
+    <section id="phases">
+      <div class="eyebrow"><span class="n">12</span> Delivery</div>
+      <h2>Ordered by dependency, not by calendar</h2>
+
+      <p>
+        Effort is relative so scope can be compared without committing to dates. The two
+        extra-large phases carry the most risk — one is a security boundary, the other fights
+        flaky tests. Neither should be planned as an average phase.
+      </p>
+
+      <div class="table-wrap wide">
+        <table>
+          <thead><tr><th>Phase</th><th>Theme</th><th>Effort</th><th>Gate</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">00</td><td>Foundation — settings registry, job pipeline, capability registry</td><td><span class="effort e-l">L</span></td><td>—</td></tr>
+            <tr><td class="mono">01</td><td>AI provider layer</td><td><span class="effort e-m">M</span></td><td>—</td></tr>
+            <tr><td class="mono">02</td><td>Ingest, extraction, test case generation</td><td><span class="effort e-l">L</span></td><td><span class="chip chip-risk">G1</span></td></tr>
+            <tr><td class="mono">03</td><td>Code generation and export</td><td><span class="effort e-s">S</span></td><td>—</td></tr>
+            <tr><td class="mono">04</td><td>Execution engine</td><td><span class="effort e-xl">XL</span></td><td><span class="chip chip-risk">G2</span> <span class="chip chip-risk">G3</span></td></tr>
+            <tr><td class="mono">05</td><td>Failure analysis and defect tracker</td><td><span class="effort e-m">M</span></td><td>—</td></tr>
+            <tr><td class="mono">06</td><td>Repository ingest and unit tests</td><td><span class="effort e-l">L</span></td><td>—</td></tr>
+            <tr><td class="mono">07</td><td>UI tests</td><td><span class="effort e-xl">XL</span></td><td><span class="chip chip-risk">G3</span></td></tr>
+            <tr><td class="mono">08</td><td>Test data and mock server</td><td><span class="effort e-m">M</span></td><td>—</td></tr>
+            <tr><td class="mono">09</td><td>Performance and security testing</td><td><span class="effort e-l">L</span></td><td><span class="chip chip-risk">G3</span></td></tr>
+            <tr><td class="mono">10</td><td>Optional external integrations</td><td><span class="effort e-m">M</span></td><td>—</td></tr>
+            <tr><td class="mono">11</td><td>Maintenance and drift</td><td><span class="effort e-l">L</span></td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Four milestones</h3>
+      <div class="cards">
+        <div class="card">
+          <span class="k">M1 · after phase 00</span>
+          <h3>The pipeline works</h3>
+          <p>A user submits, walks away, and gets notified. No AI involved yet.</p>
+        </div>
+        <div class="card">
+          <span class="k">M2 · after phase 02</span>
+          <h3>Generation is useful</h3>
+          <p>A working QA engineer confirms the generated test cases are usable without substantial rewriting.</p>
+        </div>
+        <div class="card">
+          <span class="k">M3 · after phase 04</span>
+          <h3>Execution is real</h3>
+          <p>Tests generated in the platform run in the platform and match a local run exactly.</p>
+        </div>
+        <div class="card">
+          <span class="k">M4 · after phase 05</span>
+          <h3>The loop closes</h3>
+          <p>Generate, run, fail, analyse, file a defect, fix — end to end, with no external integration configured.</p>
+        </div>
+      </div>
+
+      <div class="note risk">
+        <h4>M2 is the real go / no-go</h4>
+        <p>
+          If a QA engineer says the generated cases are generic, wrong, or slower to fix than
+          to write from scratch, the answer is more iteration on prompts and schemas — not
+          building code generation on a weak foundation. Expect more than one round here and
+          plan for it rather than treating it as slippage.
+        </p>
+      </div>
+
+      <p>
+        Phases <span class="mono">00</span>–<span class="mono">05</span> deliver the usable
+        product: spec in, reviewed cases out, code generated, tests executed, failures
+        explained, defects filed. Everything after that is expansion.
+      </p>
+    </section>
+
+    <!-- 13 ============================================== -->
+    <section id="security">
+      <div class="eyebrow"><span class="n">13</span> Security</div>
+      <h2>Three gates, recorded before the work starts</h2>
+
+      <p>
+        Not during, and not after. Each blocks a specific phase because retrofitting it is
+        far harder than building it in.
+      </p>
+
+      <div class="rows">
+        <div class="row">
+          <div class="rn">G1</div>
+          <div>
+            <h3>Client data and outside models — blocks phase 02</h3>
+            <p>
+              Client repositories and specifications are likely covered by NDAs, so sending
+              them to an outside service is a disclosure. Needed: a contract review on
+              subprocessors, a per-project approval process, and a residency policy.
+            </p>
+            <p class="meta">Cheaper than it looks — see Fig 9. A client who refuses gets a local model, so one answer no longer blocks the product.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">G2</div>
+          <div>
+            <h3>Runner isolation — blocks phase 04</h3>
+            <p>
+              The runner executes model-generated code, so plain containers are not a
+              sufficient boundary. Needed: the hardened runtime chosen, the network policy
+              defined, and agreement on where runner hosts sit.
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">G3</div>
+          <div>
+            <h3>Target allowlisting — blocks phases 04, 07 and 09</h3>
+            <p>
+              Security probes and load tests are indistinguishable from an attack when
+              pointed at a host you do not own. Needed: server-side allowlist enforcement,
+              rules for rejecting internal addresses, and an approval flow before the first
+              run against any new host.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h3>Standing controls</h3>
+      <ul>
+        <li>Secrets encrypted at rest; never returned by the API, never reachable by a logger, never in a notification.</li>
+        <li>Every model-supplied file path resolved and confined to the workspace before any file operation.</li>
+        <li>Write-capable external tools kept away from the agents that read untrusted content — that intersection is where prompt injection turns into action.</li>
+        <li>Generated test data contains no real personal data; card numbers come only from published test ranges.</li>
+        <li>Audit log for login, settings change, run trigger, allowlist change, approval change and secret rotation.</li>
+      </ul>
+    </section>
+
+    <!-- 14 ============================================== -->
+    <section id="decisions">
+      <div class="eyebrow"><span class="n">14</span> Open decisions</div>
+      <h2>Six things still to settle</h2>
+
+      <div class="table-wrap wide">
+        <table>
+          <thead><tr><th>#</th><th>Decision</th><th>Needed by</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">1</td><td>A first real project, plus a named QA engineer to review the generated output</td><td class="mono">phase 02</td></tr>
+            <tr><td class="mono">2</td><td>Spend ceiling for model usage — decides whether generation fans out per endpoint or batches</td><td class="mono">phase 01</td></tr>
+            <tr><td class="mono">3</td><td>Which provider kinds to support at launch</td><td class="mono">phase 01</td></tr>
+            <tr><td class="mono">4</td><td>Contract review outcome for G1</td><td class="mono">phase 02</td></tr>
+            <tr><td class="mono">5</td><td>Runner host environment — existing machine, new machine, or managed</td><td class="mono">phase 04</td></tr>
+            <tr><td class="mono">6</td><td>Whether local model inference is needed at launch or later</td><td class="mono">phase 01</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <h4>Recommendation on decision 3</h4>
+        <p>
+          Start with two: Claude directly, and the OpenAI-compatible adapter. The second
+          covers local models and most gateways, which is what actually unblocks the NDA
+          problem. Add the cloud-specific kinds when a client asks for one.
+        </p>
+      </div>
+    </section>
+
+    <!-- 15 ============================================== -->
+    <section id="docs">
+      <div class="eyebrow"><span class="n">15</span> Document map</div>
+      <h2>Where each answer lives</h2>
+
+      <div class="docmap">
+        <div class="docrow">
+          <div class="f">README.md</div>
+          <div class="d"><em>Start here.</em> Document map, six principles, architecture, phase status, gates, open decisions.</div>
+        </div>
+        <div class="docrow">
+          <div class="f">requirements.md</div>
+          <div class="d"><em>What must be built.</em> Scope, roles, functional requirements, settings rules, data model, security gates, acceptance criteria. The contract — when two documents disagree, this one wins.</div>
+        </div>
+        <div class="docrow">
+          <div class="f">features.md</div>
+          <div class="d"><em>Which features exist.</em> Seventeen modules, every feature with its phase, AI tier, and built-in or optional status. A feature not in the catalog is not in scope.</div>
+        </div>
+        <div class="docrow">
+          <div class="f">ai-architecture.md</div>
+          <div class="d"><em>How the AI layer works.</em> The nine touchpoints and the banned list, provider design, orchestration, external tools, cost handling.</div>
+        </div>
+        <div class="docrow">
+          <div class="f">tech-stack.md</div>
+          <div class="d"><em>Why each technology.</em> Every choice with its rejected alternatives and its cost.</div>
+        </div>
+        <div class="docrow">
+          <div class="f">backend-standards.md</div>
+          <div class="d"><em>How to write the backend.</em> Layout, layering, errors, jobs, database, API, security, testing — and a definition-of-done checklist for every pull request.</div>
+        </div>
+        <div class="docrow">
+          <div class="f">plan.md</div>
+          <div class="d"><em>In what order.</em> Twelve phases, milestones, blocking gates, sequencing rules, relative effort.</div>
+        </div>
+      </div>
+
+      <h3>First move</h3>
+      <p>
+        Scaffold the repository, stand up the database and queue, then build the settings
+        registry and the capability registry <em>before any feature</em>. Those two carry the
+        configuration-in-the-UI and self-contained guarantees — Fig 7 and Fig 8. Everything
+        else is easier once they exist, and retrofitting either is expensive.
+      </p>
+    </section>
+
+    <div class="end">
+      Qavia · internal Hyscaler platform · design approved, pre-build
+    </div>
+
+  </main>
+</div>
+
+<script>
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail-index a'));
+    var ids = links.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections = ids.map(function (id) { return document.getElementById(id); }).filter(Boolean);
+    var bar = document.getElementById('progbar');
+
+    function setCurrent(id) {
+      links.forEach(function (a) {
+        if (a.getAttribute('href') === '#' + id) { a.setAttribute('aria-current', 'true'); }
+        else { a.removeAttribute('aria-current'); }
+      });
+    }
+
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        var best = null;
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) { return; }
+          if (!best || e.intersectionRatio > best.intersectionRatio) { best = e; }
+        });
+        if (best) { setCurrent(best.target.id); }
+      }, { rootMargin: '-12% 0px -72% 0px', threshold: [0, 0.2, 0.5, 1] });
+      sections.forEach(function (s) { io.observe(s); });
+    } else {
+      setCurrent(ids[0]);
+    }
+
+    function onScroll() {
+      var h = document.documentElement;
+      var max = h.scrollHeight - h.clientHeight;
+      if (bar) { bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%'; }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    function currentIndex() {
+      var y = window.scrollY + window.innerHeight * 0.2;
+      var idx = 0;
+      sections.forEach(function (s, i) { if (s.offsetTop <= y) { idx = i; } });
+      return idx;
+    }
+
+    document.addEventListener('keydown', function (e) {
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) { return; }
+      if (e.metaKey || e.ctrlKey || e.altKey) { return; }
+
+      var k = e.key, dir = 0;
+      if (k === 'j' || k === 'J' || k === 'ArrowDown' || k === 'PageDown') { dir = 1; }
+      else if (k === 'k' || k === 'K' || k === 'ArrowUp' || k === 'PageUp') { dir = -1; }
+      else { return; }
+
+      e.preventDefault();
+      var next = Math.min(sections.length - 1, Math.max(0, currentIndex() + dir));
+      sections[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setCurrent(sections[next].id);
+    });
+  }());
+</script>
+</body>
+</html>

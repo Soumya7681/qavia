@@ -1,0 +1,16 @@
+# oapi-codegen configuration for the Python AI service client.
+#
+# Client only: this is a contract Go consumes, not one it serves. The schema is
+# produced by scripts/dump-ai-schema.sh from the FastAPI app itself, so the two
+# runtimes cannot drift without CI noticing (BE-1.3).
+
+package: aigen
+output: ../internal/llm/aigen/ai.gen.go
+
+generate:
+  client: true
+  models: true
+
+output-options:
+  skip-prune: true
+  nullable-type: true

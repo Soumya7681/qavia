@@ -1,0 +1,87 @@
+version: "2"
+
+# The SQL is the source of truth and the compiler checks it. Queries live in
+# queries/*.sql, sqlc parses them against the migrated schema, and a column rename
+# that breaks a query fails `go generate` and then the build, rather than a
+# request at runtime (tech-stack.md 5).
+#
+# Dynamic filtering is the one exception and is built with squirrel inside the
+# owning store, parameterised placeholders only, with an integration test per
+# query.
+
+sql:
+  - engine: postgresql
+    schema: "migrations"
+    queries: "queries"
+    strict_function_checks: true
+    gen:
+      go:
+        package: "dbgen"
+        out: "internal/store/dbgen"
+        sql_package: "pgx/v5"
+
+        # An interface makes the generated queries substitutable in a store test
+        # without a mocked database standing in for Postgres itself.
+        emit_interface: true
+
+        # A nil slice and an empty slice serialise differently, and a list
+        # endpoint returning null instead of [] breaks the client.
+        emit_empty_slices: true
+
+        # Plain *string and *time.Time rather than pgtype wrappers, so domain
+        # mappers stay readable.
+        emit_pointers_for_null_types: true
+
+        # sqlc row structs never leave the package, so JSON tags on them would be
+        # misleading: every response goes through an explicit mapper.
+        emit_json_tags: false
+
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true
+
+          # Without these, every timestamp comes back as pgtype.Timestamptz and
+          # every mapper has to unwrap it. time.Time and *time.Time read the same
+          # way, and NFR-7 (store UTC, display in the user's timezone) is a
+          # formatting concern, not a column-type one.
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "pg_catalog.timestamptz"
+            go_type: "time.Time"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+          - db_type: "pg_catalog.timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+
+          # Money is numeric, never float (backend-standards.md 9), and a domain
+          # type holding pgtype.Numeric would push that plumbing into every
+          # mapper. decimal.Decimal is registered on the pool in store.Open, so
+          # the driver and the generated code agree.
+          - db_type: "pg_catalog.numeric"
+            go_type: "github.com/shopspring/decimal.Decimal"
+          - db_type: "pg_catalog.numeric"
+            nullable: true
+            go_type:
+              import: "github.com/shopspring/decimal"
+              type: "Decimal"
+              pointer: true
+
+          # jsonb stops at the store boundary. The owning package unmarshals it
+          # into a named type; a map[string]any in a domain type is a review
+          # failure (backend-standards.md 9).
+          - db_type: "jsonb"
+            go_type: "encoding/json.RawMessage"

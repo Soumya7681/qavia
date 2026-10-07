@@ -1,0 +1,13 @@
+{
+  "name": "qavia-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "comment": "Placeholder. The app is scaffolded in FE-S.1, which is blocked until the contract freeze (BE-X.1). Only the client-generation path exists now, so BE-0.8 can prove the spec generates a usable TypeScript client.",
+  "scripts": {
+    "gen": "openapi-typescript ../api/openapi/qavia.yaml -o src/lib/api/schema.d.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.9.1"
+  }
+}

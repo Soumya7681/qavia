@@ -1,0 +1,1712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<meta name="description" content="Qavia competitive analysis. Top 10 competitors by scope overlap, all 145 catalog features scored against the market, gaps, build-buy-wrap calls, and what it changes in the plan." />
+<title>Qavia — Competitive Analysis</title>
+
+<style>
+  /* ============ reset ============ */
+  html { -webkit-text-size-adjust: 100%; }
+  body, h1, h2, h3, h4, h5, p, ul, ol, dl, dd, figure, figcaption, table { margin: 0; }
+  ul, ol { padding: 0; }
+  img, svg { max-width: 100%; }
+  table { border-collapse: collapse; }
+
+  /* ============ tokens ============ */
+  :root {
+    color-scheme: light;
+
+    --ground:       #F6F8F7;
+    --surface:      #FFFFFF;
+    --sunk:         #F0F3F1;
+    --ink:          #131E1A;
+    --ink-soft:     #2E3F38;
+    --muted:        #5B6B64;
+    --faint:        #93A19A;
+    --rule:         #DBE2DE;
+    --rule-soft:    #EAEFEC;
+
+    --accent:       #0E6B52;
+    --accent-deep:  #084A38;
+    --accent-wash:  #E6F0EA;
+    --accent-line:  #C8DED3;
+
+    --risk:         #A8431A;
+    --risk-wash:    #FBEDE6;
+    --risk-line:    #EED6C8;
+
+    --f-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --f-serif: Charter, "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+    --f-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --prose: 68ch;
+    --rail: 16rem;
+    --pad: 3.6rem;
+  }
+
+  /* Single-theme document, same as presentation.html. Hold the light ground even
+     when the OS preference or a viewer toggle asks for dark. */
+  @media (prefers-color-scheme: dark) { :root { color-scheme: light; } }
+  :root[data-theme="dark"] { color-scheme: light; }
+
+  /* ============ base ============ */
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-sans);
+    font-size: 16.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { color: var(--accent-deep); }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  code, .mono { font-family: var(--f-mono); }
+  code {
+    font-size: 0.86em;
+    background: var(--sunk);
+    border: 1px solid var(--rule-soft);
+    padding: 0.08em 0.34em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  strong { font-weight: 640; }
+
+  /* ============ shell ============ */
+  .shell {
+    display: grid;
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    max-width: 1480px;
+    margin: 0 auto;
+  }
+
+  /* ============ rail ============ */
+  .rail {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    padding: 2.6rem 1.3rem 1.8rem 2rem;
+    border-right: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+    background: var(--ground);
+  }
+
+  .wordmark { display: flex; align-items: baseline; gap: 0.55rem; }
+  .wordmark .tick {
+    width: 0.5rem; height: 0.5rem; flex: none;
+    background: var(--accent);
+    border-radius: 50%;
+    transform: translateY(-2px);
+  }
+  .wordmark .name {
+    font-family: var(--f-mono);
+    font-size: 1.08rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .wordmark .sub {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 0.645rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+    margin-top: 0.34rem;
+  }
+
+  .rail-index { display: flex; flex-direction: column; }
+
+  .rail-index a {
+    font-family: var(--f-mono);
+    font-size: 0.735rem;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 0.35rem 0 0.35rem 0.8rem;
+    border-left: 2px solid var(--rule);
+    display: flex;
+    gap: 0.55rem;
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+  .rail-index a .n { color: var(--faint); font-variant-numeric: tabular-nums; flex: none; }
+  .rail-index a:hover { color: var(--ink); border-left-color: var(--faint); }
+  .rail-index a[aria-current="true"] {
+    color: var(--accent-deep);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+  .rail-index a[aria-current="true"] .n { color: var(--accent); }
+
+  .rail-foot {
+    margin-top: auto;
+    font-family: var(--f-mono);
+    font-size: 0.655rem;
+    line-height: 1.75;
+    color: var(--muted);
+  }
+  .rail-foot kbd {
+    font-family: var(--f-mono);
+    font-size: 0.95em;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    border-radius: 3px;
+    padding: 0.05em 0.32em;
+  }
+
+  /* ============ progress (narrow screens) ============ */
+  .progress { display: none; position: fixed; inset: 0 0 auto 0; height: 2px; background: var(--rule-soft); z-index: 40; }
+  .progress > i { display: block; height: 100%; width: 0; background: var(--accent); }
+
+  /* ============ main ============ */
+  main { min-width: 0; padding-bottom: 7rem; }
+
+  section { padding: 4.2rem var(--pad) 0; scroll-margin-top: 1rem; }
+  section + section { padding-top: 4.6rem; }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 0.695rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.4rem;
+  }
+  .eyebrow .n { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+
+  h1 {
+    font-family: var(--f-serif);
+    font-size: clamp(2.5rem, 5vw, 3.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.022em;
+    font-weight: 400;
+    margin-bottom: 1.3rem;
+    text-wrap: balance;
+    max-width: 22ch;
+  }
+  h2 {
+    font-family: var(--f-serif);
+    font-size: clamp(1.6rem, 2.9vw, 2.05rem);
+    line-height: 1.16;
+    letter-spacing: -0.014em;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    text-wrap: balance;
+    max-width: 32ch;
+  }
+  h3 {
+    font-family: var(--f-sans);
+    font-size: 1rem;
+    font-weight: 640;
+    letter-spacing: -0.004em;
+    margin: 2.2rem 0 0.55rem;
+  }
+  h4 {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 0.65rem;
+  }
+
+  p, .prose ul, .prose ol { max-width: var(--prose); }
+  p { margin-bottom: 1rem; }
+  .lede { font-size: 1.12rem; color: var(--ink-soft); max-width: 62ch; }
+
+  ul, ol { padding-left: 1.15rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.4rem; }
+  li::marker { color: var(--faint); }
+
+  .wide { max-width: 100%; }
+
+  /* ============ cover ============ */
+  .cover { min-height: 74vh; display: flex; flex-direction: column; justify-content: center; padding-top: 3rem; }
+  .cover .eyebrow { margin-bottom: 2rem; }
+
+  .statstrip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 2.4rem;
+  }
+  .stat { background: var(--surface); padding: 1.05rem 1.1rem 1.15rem; }
+  .stat .v {
+    font-family: var(--f-mono);
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--accent-deep);
+    font-variant-numeric: tabular-nums;
+    display: block;
+  }
+  .stat.warn .v { color: var(--risk); }
+  .stat .l {
+    font-family: var(--f-mono);
+    font-size: 0.655rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    display: block;
+    line-height: 1.5;
+  }
+
+  /* ============ tables ============ */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    margin-bottom: 1.3rem;
+  }
+  table { width: 100%; font-size: 0.87rem; min-width: 34rem; }
+  th, td { text-align: left; padding: 0.58rem 0.9rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  th {
+    font-family: var(--f-mono);
+    font-size: 0.67rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--sunk);
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: #FAFCFB; }
+  td.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 0.82rem; white-space: nowrap; }
+  td.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+  .matrix td.mono { text-align: center; }
+  .matrix th { text-align: center; }
+  .matrix th:first-child, .matrix td:first-child { text-align: left; }
+  .y { color: var(--accent-deep); font-weight: 600; }
+  .p { color: var(--muted); }
+  .n { color: var(--faint); }
+
+  /* ============ chips ============ */
+  .chip {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-size: 0.655rem;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.42rem;
+    border-radius: 3px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .chip-accent { background: var(--accent-wash); color: var(--accent-deep); border-color: var(--accent-line); }
+  .chip-plain  { background: var(--sunk); color: var(--muted); border-color: var(--rule); }
+  .chip-risk   { background: var(--risk-wash); color: var(--risk); border-color: var(--risk-line); }
+
+  .chip-unique { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }
+  .chip-ahead  { background: var(--accent-wash); color: var(--accent-deep); border-color: var(--accent-line); }
+  .chip-parity { background: var(--sunk); color: var(--muted); border-color: var(--rule); }
+  .chip-stakes { background: transparent; color: var(--faint); border-color: var(--rule); }
+  .chip-behind { background: var(--risk-wash); color: var(--risk); border-color: var(--risk-line); }
+
+  /* ============ cards ============ */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1.3rem;
+  }
+  .card { background: var(--surface); padding: 1.25rem 1.3rem 1.35rem; display: flex; flex-direction: column; gap: 0.45rem; }
+  .card .k { font-family: var(--f-mono); font-size: 0.665rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .card h3 { margin: 0; font-size: 0.98rem; }
+  .card p { margin: 0; font-size: 0.87rem; color: var(--ink-soft); max-width: none; }
+
+  /* ============ callout ============ */
+  .note {
+    border-left: 2px solid var(--accent);
+    background: var(--accent-wash);
+    padding: 0.95rem 1.15rem;
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 1.3rem;
+    max-width: var(--prose);
+  }
+  .note.risk { border-left-color: var(--risk); background: var(--risk-wash); }
+  .note h4 { color: var(--accent-deep); }
+  .note.risk h4 { color: var(--risk); }
+  .note p { font-size: 0.91rem; max-width: none; }
+  .note > :last-child { margin-bottom: 0; }
+
+  /* ============ numbered rows ============ */
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    display: grid;
+    grid-template-columns: 2.7rem minmax(0, 1fr);
+    gap: 0 1.05rem;
+    padding: 1.3rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .rows .row:last-child { border-bottom: 1px solid var(--rule); }
+  .row .rn { font-family: var(--f-mono); font-size: 0.82rem; color: var(--accent); font-variant-numeric: tabular-nums; padding-top: 0.15rem; }
+  .row h3 { margin: 0 0 0.32rem; font-size: 1rem; }
+  .row p { margin: 0 0 0.45rem; font-size: 0.91rem; max-width: 66ch; }
+  .row .meta { font-family: var(--f-mono); font-size: 0.685rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.4rem 0.8rem; align-items: center; }
+
+  /* ============ legend ============ */
+  .legend {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    padding: 1.05rem 1.2rem 1.15rem;
+    margin-bottom: 1.6rem;
+    max-width: 100%;
+  }
+  .legend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.6rem 1.6rem; margin-top: 0.35rem; }
+  .lg { display: flex; align-items: baseline; gap: 0.6rem; font-size: 0.83rem; color: var(--ink-soft); }
+  .lg .chip { flex: none; }
+
+  /* ============ split ============ */
+  .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 2rem; max-width: 100%; }
+  .split p, .split ul { max-width: none; }
+
+  /* ============ pipeline strip ============ */
+  .pipe {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    margin-bottom: 1.4rem;
+  }
+  .pipe span {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.28rem 0.55rem;
+    color: var(--ink-soft);
+  }
+  .pipe span.hot { border-color: var(--accent-line); background: var(--accent-wash); color: var(--accent-deep); }
+
+  /* ============ filter bar ============ */
+  .filters {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--ground);
+    border-bottom: 1px solid var(--rule);
+    padding: 0.7rem 0 0.75rem;
+    margin-bottom: 1.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  .filters button {
+    font-family: var(--f-mono);
+    font-size: 0.655rem;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    padding: 0.28rem 0.55rem;
+    border-radius: 3px;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .filters button:hover { color: var(--ink); border-color: var(--faint); }
+  .filters button[aria-pressed="true"] {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+    color: #fff;
+  }
+  .filters .count {
+    font-family: var(--f-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .modblock { margin-bottom: 2.2rem; }
+  .modhead { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; margin: 2.2rem 0 0.6rem; }
+  .modhead h3 { margin: 0; }
+  .modhead .tally { font-family: var(--f-mono); font-size: 0.68rem; color: var(--muted); }
+  .modblock[hidden] { display: none; }
+  .featnote { font-size: 0.88rem; color: var(--ink-soft); max-width: var(--prose); margin-bottom: 0.9rem; }
+
+  /* ============ scorebars ============ */
+  .scorebars { border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); padding: 1.15rem 1.3rem 1.3rem; margin-bottom: 1.4rem; }
+  .sb { display: grid; grid-template-columns: 5.4rem 1fr 3.4rem; gap: 0.7rem; align-items: center; margin-bottom: 0.55rem; }
+  .sb:last-child { margin-bottom: 0; }
+  .sb .lab { font-family: var(--f-mono); font-size: 0.68rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+  .sb .track { background: var(--sunk); border-radius: 2px; height: 0.62rem; overflow: hidden; }
+  .sb .fill { height: 100%; display: block; background: var(--accent); }
+  .sb.u .fill { background: var(--accent-deep); }
+  .sb.a .fill { background: var(--accent); }
+  .sb.p .fill { background: var(--faint); }
+  .sb.s .fill { background: var(--rule); }
+  .sb.b .fill { background: var(--risk); }
+  .sb .val { font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; text-align: right; }
+
+  /* ============ end ============ */
+  .end {
+    margin-top: 4.4rem;
+    padding: 2.8rem var(--pad) 0;
+    border-top: 1px solid var(--rule);
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* ============ responsive ============ */
+  @media (max-width: 940px) {
+    :root { --pad: 1.5rem; }
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .rail {
+      position: static; height: auto;
+      border-right: 0; border-bottom: 1px solid var(--rule);
+      padding: 1.4rem 1.5rem 1.2rem; gap: 1rem;
+    }
+    .rail-index { flex-direction: row; overflow-x: auto; padding-bottom: 0.2rem; }
+    .rail-index a { border-left: 0; border-bottom: 2px solid var(--rule); padding: 0.3rem 0.8rem; white-space: nowrap; }
+    .rail-index a[aria-current="true"] { border-left: 0; border-bottom-color: var(--accent); }
+    .rail-index a:hover { border-left: 0; }
+    .rail-foot { display: none; }
+    .progress { display: block; }
+    section { padding-top: 3.1rem; }
+    section + section { padding-top: 3.3rem; }
+    .cover { min-height: auto; padding-top: 1.2rem; }
+    th { position: static; }
+    .filters { position: static; }
+    .sb { grid-template-columns: 4.6rem 1fr 3rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; animation: none !important; }
+  }
+
+  html { scroll-behavior: smooth; }
+
+  /* ============ print ============ */
+  @media print {
+    :root { --pad: 0; }
+    body { background: #fff; font-size: 10pt; }
+    .rail, .progress, .rail-foot, .filters { display: none !important; }
+    .shell { display: block; max-width: none; }
+    main { padding: 0; }
+    section { padding: 0 0 1.4rem; break-inside: auto; }
+    section + section { padding-top: 1.4rem; }
+    h2 { break-after: avoid; }
+    .note, .card, .legend, .table-wrap, .scorebars { break-inside: avoid; }
+    .table-wrap, .legend, .cards, .card, .scorebars { border-color: #bbb; }
+    tbody tr:hover td { background: transparent; }
+    .chip-unique { background: #fff; color: #000; border-color: #000; }
+    .end { break-before: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true"><i id="progbar"></i></div>
+
+<div class="shell">
+
+  <!-- ================= RAIL ================= -->
+  <nav class="rail" aria-label="Sections">
+    <div class="wordmark">
+      <span class="tick" aria-hidden="true"></span>
+      <span>
+        <span class="name">Qavia</span>
+        <span class="sub">Competitive Analysis</span>
+      </span>
+    </div>
+
+    <div class="rail-index" id="railIndex">
+      <a href="#overview"><span class="n">00</span><span>Overview</span></a>
+      <a href="#framing"><span class="n">01</span><span>How to read</span></a>
+      <a href="#top10"><span class="n">02</span><span>Top 10</span></a>
+      <a href="#detail"><span class="n">03</span><span>Competitor detail</span></a>
+      <a href="#adjacent"><span class="n">04</span><span>Adjacent players</span></a>
+      <a href="#matrix"><span class="n">05</span><span>Coverage matrix</span></a>
+      <a href="#features"><span class="n">06</span><span>Feature by feature</span></a>
+      <a href="#scorecard"><span class="n">07</span><span>Scorecard</span></a>
+      <a href="#gaps"><span class="n">08</span><span>What we lack</span></a>
+      <a href="#bbw"><span class="n">09</span><span>Build, buy, wrap</span></a>
+      <a href="#plan"><span class="n">10</span><span>Plan impact</span></a>
+      <a href="#sources"><span class="n">11</span><span>Sources</span></a>
+    </div>
+
+    <div class="rail-foot">
+      <kbd>J</kbd> <kbd>K</kbd> or <kbd>↑</kbd> <kbd>↓</kbd><br />
+      move between sections
+    </div>
+  </nav>
+
+  <!-- ================= MAIN ================= -->
+  <main>
+
+    <!-- 00 ============================================== -->
+    <section id="overview" class="cover">
+      <div class="eyebrow"><span class="n">00</span> Overview</div>
+
+      <h1>Two modules justify the build. The rest is table stakes.</h1>
+
+      <p class="lede">
+        Every individual capability in the Qavia plan already exists in a more mature
+        product. What does not exist anywhere is spec-diff-driven test maintenance
+        (F15) combined with provider-agnostic AI that can be pinned to a local model
+        for a client under NDA (F16). This document scores all 145 catalog features
+        against the ten closest competitors and says which ones to build, wrap, or drop.
+      </p>
+
+      <div class="statstrip">
+        <div class="stat"><span class="v">10</span><span class="l">Competitors<br />ranked by overlap</span></div>
+        <div class="stat"><span class="v">145</span><span class="l">Features<br />scored</span></div>
+        <div class="stat"><span class="v">27</span><span class="l">Unique,<br />no rival has it</span></div>
+        <div class="stat"><span class="v">37</span><span class="l">Ahead on<br />design</span></div>
+        <div class="stat warn"><span class="v">12</span><span class="l">Behind a<br />shipping tool</span></div>
+        <div class="stat warn"><span class="v">48%</span><span class="l">Buys no<br />advantage</span></div>
+      </div>
+    </section>
+
+    <!-- 01 ============================================== -->
+    <section id="framing">
+      <div class="eyebrow"><span class="n">01</span> How to read this</div>
+      <h2>Two different questions, both worth answering</h2>
+
+      <p>
+        Qavia is scoped as an internal Hyscaler platform (<code>requirements.md</code>
+        §2.1), not a product for sale. So "competitor" means two things.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Framing</th><th>Question it answers</th><th>Who wins it today</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Build vs buy</strong></td>
+              <td>Could Hyscaler buy this instead of building 12 phases?</td>
+              <td>Katalon, KaneAI, mabl, QA Wolf</td>
+            </tr>
+            <tr>
+              <td><strong>Market position</strong></td>
+              <td>If Qavia is ever commercialised, who is already there?</td>
+              <td>Tricentis, LambdaTest, mabl, testRigor</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Ranking below is by <strong>scope overlap</strong>, not company size. A large
+        vendor that only does UI testing overlaps less than a small one that goes from
+        specification to executed test.
+      </p>
+
+      <h3>Qavia's declared surface</h3>
+      <div class="pipe">
+        <span>spec ingest</span>
+        <span>test cases + traceability</span>
+        <span>code generation</span>
+        <span>sandboxed execution</span>
+        <span>failure root cause</span>
+        <span>defect filed</span>
+        <span class="hot">drift detection on spec change</span>
+      </div>
+      <p>
+        No single vendor covers that whole line. Several cover one segment of it far
+        better than Phase 4 Qavia will.
+      </p>
+    </section>
+
+    <!-- 02 ============================================== -->
+    <section id="top10">
+      <div class="eyebrow"><span class="n">02</span> Top 10</div>
+      <h2>Ranked by how much of Qavia they already ship</h2>
+
+      <div class="table-wrap wide">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Competitor</th><th>Category</th><th>Overlap</th><th>Threat to the build case</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">01</td><td><strong>LambdaTest KaneAI</strong></td><td>Full-lifecycle AI agent</td><td><span class="chip chip-risk">High</span></td><td>Highest. Same arc, already shipping, $15/mo entry</td></tr>
+            <tr><td class="mono">02</td><td><strong>Tricentis</strong> (Tosca, Testim, agents)</td><td>Enterprise incumbent</td><td><span class="chip chip-risk">High</span></td><td>Highest at enterprise scale, weakest on price</td></tr>
+            <tr><td class="mono">03</td><td><strong>Katalon</strong></td><td>All-in-one AI suite</td><td><span class="chip chip-risk">High</span></td><td>Free tier makes "just use this" the default counter-argument</td></tr>
+            <tr><td class="mono">04</td><td><strong>mabl</strong></td><td>Agentic SaaS E2E and API</td><td><span class="chip chip-accent">Med-High</span></td><td>Strong on execution and self-healing, weak on spec ingest</td></tr>
+            <tr><td class="mono">05</td><td><strong>QA Wolf</strong></td><td>Managed QA service</td><td><span class="chip chip-accent">Med-High</span></td><td>Replaces the outcome, not the tool. Hands back plain Playwright</td></tr>
+            <tr><td class="mono">06</td><td><strong>testRigor</strong></td><td>Natural-language authoring</td><td><span class="chip chip-accent">Medium</span></td><td>Owns "requirement in plain English becomes a test"</td></tr>
+            <tr><td class="mono">07</td><td><strong>Testsigma</strong></td><td>Codeless platform</td><td><span class="chip chip-accent">Medium</span></td><td>Broad type coverage, cloud grid included</td></tr>
+            <tr><td class="mono">08</td><td><strong>Momentic</strong></td><td>Agent-native E2E</td><td><span class="chip chip-accent">Medium</span></td><td>Dev-facing, free entry, fast-moving</td></tr>
+            <tr><td class="mono">09</td><td><strong>Qodo</strong> (ex CodiumAI)</td><td>Repo unit tests, PR review</td><td><span class="chip chip-accent">Medium</span></td><td>Directly pre-empts Qavia Phase 6</td></tr>
+            <tr><td class="mono">10</td><td><strong>Keploy</strong></td><td>API test generation, open source</td><td><span class="chip chip-accent">Medium</span></td><td>Pre-empts the Phase 2/3 API path, and it is free</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 03 ============================================== -->
+    <section id="detail">
+      <div class="eyebrow"><span class="n">03</span> Competitor detail</div>
+      <h2>What each one does, and where Qavia actually differs</h2>
+
+      <div class="rows">
+
+        <div class="row">
+          <div class="rn">01</div>
+          <div>
+            <h3>LambdaTest KaneAI</h3>
+            <p>
+              The closest thing to Qavia that exists. Requirement in natural language,
+              test authored, executed at cloud scale, code handed back in your framework,
+              self-healing, AI root cause analysis, CI hooks. One platform, same story.
+            </p>
+            <p>
+              <strong>Where Qavia differs:</strong> no unit test generation, no k6
+              performance path, no security payload generation, no built-in defect
+              tracker, no local-model option. Client code and specs leave the building.
+            </p>
+            <div class="meta"><span class="chip chip-risk">Closest rival</span> from ~$15/mo per agent, 500 agentic sessions</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">02</div>
+          <div>
+            <h3>Tricentis (Tosca, Testim, Tricentis agents)</h3>
+            <p>
+              Enterprise incumbent that shipped agentic AI test creation in 2025 to 2026.
+              Deepest coverage for SAP and packaged enterprise apps, regulated industries,
+              model-based testing.
+            </p>
+            <p>
+              <strong>Where Qavia differs:</strong> cost and setup weight. Tosca is a
+              programme, not a tool. Not a build-vs-buy threat for an internal platform.
+              It is the ceiling if Qavia ever goes commercial upmarket.
+            </p>
+            <div class="meta"><span class="chip chip-plain">Enterprise</span> sales-led contracts</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">03</div>
+          <div>
+            <h3>Katalon</h3>
+            <p>
+              Feature-complete across web, mobile, API and desktop, with AI-assisted
+              generation, self-healing and visual testing built in. Has a free tier.
+            </p>
+            <p>
+              <strong>Where Qavia differs:</strong> Katalon does not read a requirement
+              document or a repository and derive a test plan with requirement
+              traceability. Tests stay in its own format.
+            </p>
+            <div class="meta"><span class="chip chip-risk">Most likely counter-proposal</span> free tier, pilot on Monday</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">04</div>
+          <div>
+            <h3>mabl</h3>
+            <p>
+              Agentic SaaS for E2E plus API testing. Credit-metered cloud runs,
+              self-healing, strong CI integration and reporting.
+            </p>
+            <p>
+              <strong>Where Qavia differs:</strong> tests live inside mabl. No repo
+              ingest, no unit tests, no performance or security generation, no on-prem
+              model. Phase 4 and Phase 7 should be measured against mabl, not against
+              "does it run".
+            </p>
+            <div class="meta"><span class="chip chip-accent">Execution benchmark</span> ~$60/mo starter, credit-metered</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">05</div>
+          <div>
+            <h3>QA Wolf</h3>
+            <p>
+              Sells an outcome, not a tool: a managed service that builds and maintains
+              your suite and hands you standard Playwright, with coverage guarantees.
+            </p>
+            <p>
+              <strong>Where Qavia differs:</strong> same promise as software instead of a
+              vendor's people, and the code and specs stay in-house. If leadership frames
+              the problem as "we do not have enough QA capacity", QA Wolf answers it
+              without a 12-phase build.
+            </p>
+            <div class="meta"><span class="chip chip-risk">Substitute for the problem</span> managed-services economics</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">06</div>
+          <div>
+            <h3>testRigor</h3>
+            <p>
+              Tests written as plain English statements, generated from requirements,
+              executed with very low maintenance. Owns the "no locators, no code" position.
+            </p>
+            <p>
+              <strong>Where Qavia differs:</strong> proprietary syntax, tests locked in the
+              platform, no unit or performance testing, no repository understanding. Worth
+              reading their output shape before finalising Qavia's case schema.
+            </p>
+            <div class="meta"><span class="chip chip-accent">Phase 2 rival</span> requirement to test case</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">07</div>
+          <div>
+            <h3>Testsigma</h3>
+            <p>
+              Codeless natural-language authoring across web, mobile web, iOS, Android and
+              REST API, with a large browser and device grid included.
+            </p>
+            <p>
+              <strong>Where Qavia differs:</strong> same lock-in pattern as testRigor and
+              mabl. No code generation into your repository, no unit tests.
+            </p>
+            <div class="meta"><span class="chip chip-plain">Codeless</span> unpublished pricing, sales-led</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">08</div>
+          <div>
+            <h3>Momentic</h3>
+            <p>
+              Agent-native E2E. Low-code editor, plain-English steps, intent-based
+              self-healing locators, an autonomous agent that generates tests from the
+              running application itself. Free self-serve entry.
+            </p>
+            <p>
+              <strong>Where Qavia differs:</strong> Momentic explores a running app, Qavia
+              reads a spec or a repository. Different input, similar output. An agent that
+              crawls the live app finds flows a spec never describes, which is worth
+              considering as a second Phase 7 input mode.
+            </p>
+            <div class="meta"><span class="chip chip-accent">Phase 7 reference</span> free entry, demo-led above that</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">09</div>
+          <div>
+            <h3>Qodo (formerly CodiumAI)</h3>
+            <p>
+              Repo-native. The only major tool combining automated PR review with unit
+              test generation. Multi-agent review architecture as of Qodo 2.0 (February
+              2026), broad language coverage, transparent pricing.
+            </p>
+            <p>
+              <strong>Adjacent:</strong> Diffblue Cover does the same for Java only, using
+              symbolic analysis rather than an LLM, producing deterministic regression
+              tests. Higher quality inside Java, no PR review.
+            </p>
+            <div class="meta"><span class="chip chip-risk">Pre-empts Phase 6</span> already in developers' IDEs</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">10</div>
+          <div>
+            <h3>Keploy</h3>
+            <p>
+              Open source. Generates API test suites from OpenAPI specs, Postman
+              collections, curl commands or recorded traffic. Container-friendly,
+              CI-native, claims high coverage with no flake.
+            </p>
+            <p>
+              <strong>Adjacent:</strong> Schemathesis (property-based fuzzing from a
+              schema), Akto (API security), Postman Postbot (in-editor assistance, not a
+              pipeline). If Qavia's generated API tests are not clearly better than
+              Keploy's, that slice is not paying for itself.
+            </p>
+            <div class="meta"><span class="chip chip-risk">Free substitute</span> API-only, no case layer, no traceability</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 04 ============================================== -->
+    <section id="adjacent">
+      <div class="eyebrow"><span class="n">04</span> Adjacent players</div>
+      <h2>Not top ten by overlap, but each owns something Qavia claims</h2>
+
+      <div class="table-wrap wide">
+        <table>
+          <thead><tr><th>Tool</th><th>Owns</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Applitools Autonomous</strong></td><td>Visual and autonomous UI validation</td><td>Visual assertion quality Qavia will not match in Phase 7</td></tr>
+            <tr><td><strong>Functionize, ACCELQ, Virtuoso QA</strong></td><td>Enterprise codeless suites</td><td>The bracket Qavia sits in on paper, all sales-led</td></tr>
+            <tr><td><strong>Meticulous</strong></td><td>Record real traffic, auto-generate regression tests</td><td>Zero-authoring model, free entry</td></tr>
+            <tr><td><strong>Rainforest QA, Autify</strong></td><td>Managed and low-code E2E</td><td>Same substitute logic as QA Wolf, smaller</td></tr>
+            <tr><td><strong>TestCollab QA Copilot, TestRail, TestFiesta</strong></td><td>Test management with AI generation</td><td>Owns requirement traceability, which Qavia builds in Phase 0</td></tr>
+            <tr><td><strong>BrowserStack, Sauce Labs</strong></td><td>Grid plus AI features</td><td>Execution infrastructure Qavia is building itself</td></tr>
+            <tr><td><strong>Shiplight, Bug0, Qodex, TestStory</strong></td><td>2026 agent-native startups</td><td>The cohort Qavia is actually in. Fast-moving, thin</td></tr>
+            <tr><td><strong>Claude Code, Cursor, Copilot agents</strong></td><td>Writing Playwright and Jest tests directly in the repo</td><td>The genuine zero-cost alternative. See section 10</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 05 ============================================== -->
+    <section id="matrix">
+      <div class="eyebrow"><span class="n">05</span> Coverage matrix</div>
+      <h2>Where each platform stops</h2>
+
+      <div class="legend">
+        <h4>Key</h4>
+        <div class="legend-grid">
+          <div class="lg"><span class="mono y">Y</span><span>Shipping today</span></div>
+          <div class="lg"><span class="mono p">P</span><span>Partial or shallow</span></div>
+          <div class="lg"><span class="mono n">·</span><span>Absent</span></div>
+        </div>
+      </div>
+
+      <div class="table-wrap wide">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th>Platform</th><th>Spec<br>ingest</th><th>Case<br>layer</th><th>Code<br>you own</th><th>Exec</th><th>Unit</th><th>API</th><th>UI</th><th>Perf</th><th>Sec</th><th>RCA</th><th>Defects</th><th>On-prem<br>model</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Qavia (planned)</strong></td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td></tr>
+            <tr><td>KaneAI</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono n">·</td></tr>
+            <tr><td>Tricentis</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono p">P</td></tr>
+            <tr><td>Katalon</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono p">P</td><td class="mono n">·</td></tr>
+            <tr><td>mabl</td><td class="mono p">P</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono n">·</td></tr>
+            <tr><td>QA Wolf</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono n">·</td></tr>
+            <tr><td>testRigor</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono n">·</td></tr>
+            <tr><td>Testsigma</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono n">·</td></tr>
+            <tr><td>Momentic</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono n">·</td></tr>
+            <tr><td>Qodo</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono p">P</td><td class="mono n">·</td><td class="mono p">P</td></tr>
+            <tr><td>Keploy</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono y">Y</td><td class="mono y">Y</td><td class="mono p">P</td><td class="mono y">Y</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono n">·</td><td class="mono y">Y</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note risk">
+        <h4>Read the Qavia row honestly</h4>
+        <p>That row is ambition, not status. Today it is a plan document. Every other row is shipping software.</p>
+      </div>
+    </section>
+
+    <!-- 06 ============================================== -->
+    <section id="features">
+      <div class="eyebrow"><span class="n">06</span> Feature by feature</div>
+      <h2>All 145 catalog rows, scored against the market</h2>
+
+      <div class="legend">
+        <h4>Verdicts</h4>
+        <div class="legend-grid">
+          <div class="lg"><span class="chip chip-unique">Unique</span><span>No competitor ships it. Real differentiation</span></div>
+          <div class="lg"><span class="chip chip-ahead">Ahead</span><span>Others do it, our design is stricter or more traceable</span></div>
+          <div class="lg"><span class="chip chip-parity">Parity</span><span>Matched by mainstream tools</span></div>
+          <div class="lg"><span class="chip chip-stakes">Stakes</span><span>Rivals get it free by being SaaS. Cost to us, no advantage</span></div>
+          <div class="lg"><span class="chip chip-behind">Behind</span><span>A shipping competitor does it materially better</span></div>
+        </div>
+      </div>
+
+      <div class="filters" id="filters" role="group" aria-label="Filter features by verdict">
+        <button type="button" data-f="all" aria-pressed="true">All</button>
+        <button type="button" data-f="UNIQUE" aria-pressed="false">Unique</button>
+        <button type="button" data-f="AHEAD" aria-pressed="false">Ahead</button>
+        <button type="button" data-f="PARITY" aria-pressed="false">Parity</button>
+        <button type="button" data-f="STAKES" aria-pressed="false">Stakes</button>
+        <button type="button" data-f="BEHIND" aria-pressed="false">Behind</button>
+        <span class="count" id="fcount">145 features</span>
+      </div>
+
+      <div id="modules">
+
+        <!-- F1 -->
+        <div class="modblock" data-mod="F1">
+          <div class="modhead"><h3>F1 — Platform and Access</h3><span class="tally">11 features · 2 that buy anything</span></div>
+          <p class="featnote">Nine of these are the price of self-hosting. F-1.7 and F-1.11 are the only two a competitor cannot match.</p>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="BEHIND"><td class="mono">F-1.1</td><td>Local login, Argon2id, admin-invited</td><td><span class="chip chip-behind">Behind</span></td><td>Every rival ships SSO, SAML and SCIM. v1 has none. Fine internally, blocking commercially</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-1.2</td><td>Login rate limit, lockout</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-1.3</td><td>Four roles, enforced per route</td><td><span class="chip chip-parity">Parity</span></td><td>Katalon and Tricentis have finer enterprise RBAC</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-1.4</td><td>Project create, list, archive, membership</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-1.5</td><td>Settings registry</td><td><span class="chip chip-unique">Unique</span></td><td>No market equivalent because no rival needs it. Engineering win, zero customer-visible value</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-1.6</td><td>Settings UI rendered from the registry</td><td><span class="chip chip-unique">Unique</span></td><td>Same. Counts as velocity, not differentiation</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-1.7</td><td>Scoped resolution user → project → global</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rare, and it is what lets one project pin a local model (F-16.12)</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-1.8</td><td>AES-256-GCM secret storage</td><td><span class="chip chip-stakes">Stakes</span></td><td>SaaS rivals use a managed vault and never expose the problem</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-1.9</td><td>Settings audit trail</td><td><span class="chip chip-parity">Parity</span></td><td>Enterprise tiers of Tricentis and Katalon</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-1.10</td><td>First-run setup wizard</td><td><span class="chip chip-stakes">Stakes</span></td><td>Meaningless to SaaS. Pure self-host tax</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-1.11</td><td>Capability interface registry</td><td><span class="chip chip-unique">Unique</span></td><td>The mechanism behind "every integration optional". No rival attempts it, they require their cloud</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F2 -->
+        <div class="modblock" data-mod="F2">
+          <div class="modhead"><h3>F2 — Job Pipeline</h3><span class="tally">9 features · entirely table stakes</span></div>
+          <p class="featnote">Necessary, not differentiating. Do not over-invest past what Phase 0 needs.</p>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="STAKES"><td class="mono">F-2.1</td><td>Chained queue: ingest, generate, execute, analyse</td><td><span class="chip chip-stakes">Stakes</span></td><td>Every SaaS has this invisibly</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-2.2</td><td>Job status, progress, stage list</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-2.3</td><td>Live event log over SSE</td><td><span class="chip chip-parity">Parity</span></td><td>mabl, Katalon and KaneAI all stream run progress</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-2.4</td><td>Idempotency keys, a retry never duplicates rows</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rarely explicit. Directly protects the AI spend line</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-2.5</td><td>Retry with backoff, three attempts</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-2.6</td><td>Cancel a running job or run</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-2.7</td><td>Concurrency limit from settings</td><td><span class="chip chip-parity">Parity</span></td><td>Rivals sell concurrency as a pricing lever instead</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-2.8</td><td>Internal scheduler for recurring runs</td><td><span class="chip chip-parity">Parity</span></td><td>mabl, Katalon and Testsigma all schedule runs</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-2.9</td><td>Generic inbound webhook trigger</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F3 -->
+        <div class="modblock" data-mod="F3">
+          <div class="modhead"><h3>F3 — Input and Ingestion</h3><span class="tally">13 features</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-3.1</td><td>OpenAPI upload, <code>$ref</code> resolved</td><td><span class="chip chip-parity">Parity</span></td><td>Keploy, Schemathesis, Postman, testRigor</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-3.2</td><td>Postman collection import</td><td><span class="chip chip-parity">Parity</span></td><td>Keploy ingests the same</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-3.3</td><td>Requirement text pasted directly</td><td><span class="chip chip-parity">Parity</span></td><td>testRigor, KaneAI, TestCollab QA Copilot</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-3.4</td><td>Source archive upload</td><td><span class="chip chip-parity">Parity</span></td><td>Qodo, Diffblue</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-3.5</td><td>Clone by URL with an optional token</td><td><span class="chip chip-parity">Parity</span></td><td>Qodo, QA Wolf</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-3.6</td><td>GitHub and GitLab OAuth, repo browser</td><td><span class="chip chip-parity">Parity</span></td><td>Universal among repo-aware tools</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-3.7</td><td>SQL dump for schema-aware test data</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rare in QA tools. Tonic.ai and GenRocket do it as a separate product</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-3.8</td><td>Read-only Postgres inspection via MCP</td><td><span class="chip chip-unique">Unique</span></td><td>No QA vendor exposes a live DB inspection channel</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-3.9</td><td>PDF and DOCX requirement documents</td><td><span class="chip chip-behind">Behind</span></td><td>Deferred post-v1, yet Tricentis, Katalon and TestCollab already read documents. This is the input a non-technical stakeholder actually has</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-3.10</td><td>SHA-256 checksum, identical re-upload skips regeneration</td><td><span class="chip chip-unique">Unique</span></td><td>Pure cost control. Rivals bill per run and have no incentive</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-3.11</td><td>Size cap, MIME allowlist, archive-bomb rejection</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-3.12</td><td>Test-type selection, unimplemented types disabled not hidden</td><td><span class="chip chip-parity">Parity</span></td><td>Honest UX, not a moat</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-3.13</td><td>Generation works with no target URL, execution disabled with a reason</td><td><span class="chip chip-ahead">Ahead</span></td><td>Momentic, mabl and Applitools Autonomous all need a running app before they do anything</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F4 -->
+        <div class="modblock" data-mod="F4">
+          <div class="modhead"><h3>F4 — Understanding</h3><span class="tally">4 features</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-4.1</td><td>Requirement extraction: features, rules, auth, edge cases</td><td><span class="chip chip-parity">Parity</span></td><td>testRigor, KaneAI and Tricentis agents do this. Price of entry, not the product</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-4.2</td><td>Every item traces to artifact and source location</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rare. Most tools lose the link between the sentence and the test</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-4.3</td><td>Extraction review screen before generation</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rivals auto-generate and let you delete afterwards. A pre-gate is better for trust and for spend</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-4.4</td><td>Repository comprehension, uncovered paths</td><td><span class="chip chip-behind">Behind</span></td><td>Qodo, Cursor, Claude Code and Sourcegraph are years ahead. Do not build a code-understanding engine</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F5 -->
+        <div class="modblock" data-mod="F5">
+          <div class="modhead"><h3>F5 — Test Case Management</h3><span class="tally">7 features</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-5.1</td><td>Case design per requirement, boundaries, negatives, auth states</td><td><span class="chip chip-parity">Parity</span></td><td>Every AI QA tool claims this</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-5.2</td><td>Schema-locked output, retry with the error fed back</td><td><span class="chip chip-ahead">Ahead</span></td><td>Engineering discipline most vendors do not document</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-5.3</td><td>Deterministic fingerprint per case</td><td><span class="chip chip-unique">Unique</span></td><td>Nobody else has a stable identity for a generated case. All of F15 depends on it</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-5.4</td><td>Semantic dedupe for near-misses</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rivals ship duplicates and let you prune</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-5.5</td><td>Case table, inline edit, bulk approve and reject</td><td><span class="chip chip-parity">Parity</span></td><td>TestRail, TestCollab and Xray do this better, it is their whole product</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-5.6</td><td>Traceability, requirements with no cases highlighted</td><td><span class="chip chip-parity">Parity</span></td><td>Parity with test management tools, ahead of every pure AI tool in the top 10</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-5.7</td><td>Provider-specific pre-submit cost estimate</td><td><span class="chip chip-unique">Unique</span></td><td>Only possible because you own the keys. No SaaS shows you token cost</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F6 -->
+        <div class="modblock" data-mod="F6">
+          <div class="modhead"><h3>F6 — Code Generation</h3><span class="tally">12 features</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-6.1</td><td>API tests, Supertest</td><td><span class="chip chip-parity">Parity</span></td><td>Keploy generates API suites and also records real traffic, which is stronger</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-6.2</td><td>API tests, Postman collection</td><td><span class="chip chip-parity">Parity</span></td><td>Postman and Keploy native</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-6.3</td><td>Unit tests, Jest, Vitest, pytest</td><td><span class="chip chip-behind">Behind</span></td><td>Qodo covers more languages with IDE and PR integration. Diffblue beats both inside Java with symbolic generation</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-6.4</td><td>UI tests, Playwright</td><td><span class="chip chip-parity">Parity</span></td><td>QA Wolf, KaneAI and Momentic all hand back Playwright</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-6.5</td><td>Performance scripts, k6</td><td><span class="chip chip-ahead">Ahead</span></td><td>Almost no AI QA tool generates load scripts. Behind dedicated perf tooling (Grafana k6, NeoLoad, Gatling)</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-6.6</td><td>Security tests, AI picks targets, curated payload library</td><td><span class="chip chip-ahead">Ahead</span></td><td>The split is the right design. Depth is behind ZAP, Akto and StackHawk</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-6.7</td><td>Framework auto-detection, overridable</td><td><span class="chip chip-parity">Parity</span></td><td>Standard</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-6.8</td><td>Static validation: parses, imports resolve, no placeholder assertions</td><td><span class="chip chip-ahead">Ahead</span></td><td>The most underrated feature in the catalog. Most AI tools ship code that does not compile and call it output</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-6.9</td><td>File tree browser with syntax highlighting</td><td><span class="chip chip-parity">Parity</span></td><td>Standard</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-6.10</td><td>Export per file or full suite as zip</td><td><span class="chip chip-parity">Parity</span></td><td>QA Wolf and KaneAI hand over code too. mabl, testRigor and Testsigma do not, which is a real advantage over them</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-6.11</td><td>Each generated file records the case IDs it covers</td><td><span class="chip chip-unique">Unique</span></td><td>Nobody links generated code back to the case back to the requirement</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-6.12</td><td>Selector policy enforced in code, positional CSS rejected</td><td><span class="chip chip-ahead">Ahead</span></td><td>Better than prompt-only guidance, but rivals answer the same problem at runtime with self-healing, which is strictly more powerful. See section 08</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F7 -->
+        <div class="modblock" data-mod="F7">
+          <div class="modhead"><h3>F7 — Execution</h3><span class="tally">16 features · the security boundary</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="UNIQUE"><td class="mono">F-7.1</td><td>gVisor or Firecracker per run, configurable</td><td><span class="chip chip-unique">Unique</span></td><td>No QA vendor exposes the sandbox runtime. Infra vendors (E2B, Modal, Daytona) do, and are the reuse option</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-7.2</td><td>One-shot containers, never reused</td><td><span class="chip chip-stakes">Stakes</span></td><td>SaaS does this internally</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-7.3</td><td>CPU, memory, process, wall-clock, disk limits</td><td><span class="chip chip-stakes">Stakes</span></td><td>Internal to every SaaS</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-7.4</td><td>Default-deny egress, project allowlist only</td><td><span class="chip chip-ahead">Ahead</span></td><td>Genuinely stronger than any SaaS runner you cannot inspect</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-7.5</td><td>Cloud metadata endpoint blocked at the network layer</td><td><span class="chip chip-ahead">Ahead</span></td><td>Correct and rarely stated</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-7.6</td><td>Non-root, read-only rootfs, small tmpfs</td><td><span class="chip chip-stakes">Stakes</span></td><td>Standard container hygiene</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-7.7</td><td>Per-project target host allowlist, enforced before enqueue</td><td><span class="chip chip-unique">Unique</span></td><td>No rival has a server-side concept of "this project may only touch these hosts"</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-7.8</td><td>SSRF guard on private, loopback and link-local targets</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rivals assume you own the target</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-7.9</td><td>Live log tail during a run</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-7.10</td><td>Artifact capture: logs, screenshots, videos, traces</td><td><span class="chip chip-parity">Parity</span></td><td>Playwright trace is standard. mabl and Katalon have richer artifact viewers</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-7.11</td><td>Flake detection by re-running failures</td><td><span class="chip chip-parity">Parity</span></td><td>mabl and Katalon. Behind Trunk Flaky Tests and Datadog CI Visibility, which sell this as a product</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-7.12</td><td>Flake quarantine</td><td><span class="chip chip-behind">Behind</span></td><td>Same. Buy the signal, do not build the analytics</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-7.13</td><td>Runner images pinned by digest, updatable from settings</td><td><span class="chip chip-ahead">Ahead</span></td><td>Supply-chain discipline rivals do not expose</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-7.14</td><td>Coverage tool executed inside the runner</td><td><span class="chip chip-parity">Parity</span></td><td>Standard</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-7.15</td><td>Bundled Playwright container as the built-in driver</td><td><span class="chip chip-behind">Behind</span></td><td>One container versus BrowserStack, LambdaTest and Sauce grids. See section 08</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-7.16</td><td>Playwright MCP as an alternative driver behind the same interface</td><td><span class="chip chip-unique">Unique</span></td><td>Swappable browser driver. Nobody else offers a choice</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F8 -->
+        <div class="modblock" data-mod="F8">
+          <div class="modhead"><h3>F8 — UI Flow Discovery</h3><span class="tally">4 features</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-8.1</td><td>Agent drives the real browser, discovers routes and flows</td><td><span class="chip chip-parity">Parity</span></td><td>Momentic, Applitools Autonomous and open-source Skyvern and browser-use already do this. Meticulous goes further by recording real user traffic</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-8.2</td><td>Configured auth flow handled during discovery</td><td><span class="chip chip-parity">Parity</span></td><td>Table stakes for anything that crawls</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-8.3</td><td>Flow graph as reviewable structured output</td><td><span class="chip chip-ahead">Ahead</span></td><td>The review gate is the differentiator, not the crawl</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-8.4</td><td>Screenshot understanding for visual layout checks</td><td><span class="chip chip-behind">Behind</span></td><td>Applitools has a decade of visual AI, baselines and diff root-causing. A vision call on a screenshot is not the same product</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F9 -->
+        <div class="modblock" data-mod="F9">
+          <div class="modhead"><h3>F9 — Failure Analysis and Defects</h3><span class="tally">11 features · 5 ahead</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-9.1</td><td>Root cause, probable cause, suggested fix</td><td><span class="chip chip-parity">Parity</span></td><td>mabl auto-triage, KaneAI RCA, Testsigma all ship this</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-9.2</td><td>Mandatory evidence, an analysis without it is rejected and retried</td><td><span class="chip chip-ahead">Ahead</span></td><td>The discipline no vendor advertises because it makes the demo shorter. Keep it</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-9.3</td><td>Source file and git blame when a repo is connected</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rare, because most rivals never see your repository</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-9.4</td><td>Stability score from measurement, never a model self-report</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rivals do show fabricated confidence percentages. This is a correct call</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-9.5</td><td>Analysis panel with evidence highlighted in context</td><td><span class="chip chip-parity">Parity</span></td><td>Standard</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-9.6</td><td>Thumbs up and down feedback for prompt iteration</td><td><span class="chip chip-parity">Parity</span></td><td>Standard</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-9.7</td><td>Internal defect tracker</td><td><span class="chip chip-behind">Behind</span></td><td>Jira and Linear exist. Principle 5 forces this, so keep it minimal: severity, status, assignee, comments, nothing more</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-9.8</td><td>Promote a failure to a defect in one action</td><td><span class="chip chip-parity">Parity</span></td><td>mabl and Katalon file to Jira in one click</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-9.9</td><td>Defect traces to run, case, requirement, analysis, artifacts</td><td><span class="chip chip-ahead">Ahead</span></td><td>The full chain is rare. This is the reporting story</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-9.10</td><td>Duplicate linking on same case, same root cause</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rivals flood the tracker</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-9.11</td><td>Push a defect to Jira, key stored back</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F10 -->
+        <div class="modblock" data-mod="F10">
+          <div class="modhead"><h3>F10 — Test Data and Mocking</h3><span class="tally">8 features · most commodity module</span></div>
+          <p class="featnote">Recommend wrapping Prism or Microcks behind the capability interface rather than building F-10.6 to F-10.8. See section 09.</p>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-10.1</td><td>Schema-driven data via seeded faker</td><td><span class="chip chip-parity">Parity</span></td><td>Free libraries. Correct choice not to use AI here</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-10.2</td><td>AI assist only for semantically tricky fields</td><td><span class="chip chip-ahead">Ahead</span></td><td>Narrow and cheap. Good design</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-10.3</td><td>Boundary and invalid data sets</td><td><span class="chip chip-parity">Parity</span></td><td>Schemathesis does this by property-based generation, arguably better</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-10.4</td><td>Card numbers only from published test ranges</td><td><span class="chip chip-ahead">Ahead</span></td><td>Compliance discipline. Cheap and correct</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-10.5</td><td>Export as CSV, JSON, SQL</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-10.6</td><td>Mock server generated from the spec</td><td><span class="chip chip-behind">Behind</span></td><td>Prism, WireMock, Microcks and Mockoon are mature, free, and generate from OpenAPI today</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-10.7</td><td>Mock fault injection: delay, 500s, timeouts</td><td><span class="chip chip-parity">Parity</span></td><td>WireMock and Toxiproxy</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-10.8</td><td>Mock container per project with a live URL</td><td><span class="chip chip-parity">Parity</span></td><td>Microcks does exactly this</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F11 -->
+        <div class="modblock" data-mod="F11">
+          <div class="modhead"><h3>F11 — Performance and Security Testing</h3><span class="tally">6 features</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="AHEAD"><td class="mono">F-11.1</td><td>k6 generation from endpoints plus a load profile</td><td><span class="chip chip-ahead">Ahead</span></td><td>Few AI QA tools generate load scripts at all</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-11.2</td><td>Latency and throughput charts from k6 metrics</td><td><span class="chip chip-behind">Behind</span></td><td>Grafana renders k6 output for free and better</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-11.3</td><td>Probes: SQLi, XSS, CSRF, JWT, IDOR, rate limit, broken auth</td><td><span class="chip chip-behind">Behind</span></td><td>OWASP ZAP, Akto, StackHawk and Burp are dedicated DAST products with maintained payload corpora. A curated library falls behind within a year</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-11.4</td><td>Findings with severity, evidence, reproduction steps</td><td><span class="chip chip-parity">Parity</span></td><td>Standard DAST output</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-11.5</td><td>Both types off by default, enabled by Lead or Admin</td><td><span class="chip chip-ahead">Ahead</span></td><td>Governance rivals skip because they assume you own the target</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-11.6</td><td>Explicit host confirmation before the first run</td><td><span class="chip chip-ahead">Ahead</span></td><td>Same</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F12 -->
+        <div class="modblock" data-mod="F12">
+          <div class="modhead"><h3>F12 — Reporting</h3><span class="tally">7 features</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-12.1</td><td>Project dashboard</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-12.2</td><td>Requirement coverage</td><td><span class="chip chip-ahead">Ahead</span></td><td>Ahead of the AI-native tools. Parity with Xray and TestRail</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-12.3</td><td>Line and branch code coverage</td><td><span class="chip chip-parity">Parity</span></td><td>Standard tooling. Codecov and SonarQube report it better</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-12.4</td><td>Recent failures linked to analysis</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-12.5</td><td>Report export as HTML and PDF</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+                <tr data-v="BEHIND"><td class="mono">F-12.6</td><td>Run history and trend over time</td><td><span class="chip chip-behind">Behind</span></td><td>mabl and Datadog CI Visibility have far deeper trend analytics</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-12.7</td><td>AI spend by provider, project and agent</td><td><span class="chip chip-unique">Unique</span></td><td>Structurally impossible for a SaaS rival to offer, since the tokens are theirs</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F13 -->
+        <div class="modblock" data-mod="F13">
+          <div class="modhead"><h3>F13 — Optional External Integrations</h3><span class="tally">7 features · breadth is a losing race</span></div>
+          <p class="featnote">Katalon and Tricentis have hundreds of integrations. Compete on the guardrails (F-13.7), not the count.</p>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-13.1</td><td>Jira, create and sync defects</td><td><span class="chip chip-parity">Parity</span></td><td>Universal, and rivals sync bidirectionally with more field mapping</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-13.2</td><td>GitHub and GitLab, PR diff read, PR creation with a fix</td><td><span class="chip chip-parity">Parity</span></td><td>Qodo does PR review and fix suggestion as its core product</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-13.3</td><td>Slack run summaries</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-13.4</td><td>GitHub Actions and Jenkins triggers</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-13.5</td><td>Email via SMTP</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-13.6</td><td>MinIO and S3 object storage</td><td><span class="chip chip-stakes">Stakes</span></td><td>Internal to SaaS</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-13.7</td><td>MCP servers with deny-all allowlist, write confirmation, least privilege, injection guardrails, full audit</td><td><span class="chip chip-ahead">Ahead</span></td><td>Most vendors bolted on MCP with no written guardrail policy. This section is better thought out than the market</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F14 -->
+        <div class="modblock" data-mod="F14">
+          <div class="modhead"><h3>F14 — Notifications</h3><span class="tally">5 features</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="STAKES"><td class="mono">F-14.1</td><td>In-app notification centre, zero configuration</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-14.2</td><td>Notify on completion, failure, or needing input</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-14.3</td><td>Per-user, per-channel toggles</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-14.4</td><td>Deep link to the result in every notification</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-14.5</td><td>Unconfigured channels read "Not configured", never an error</td><td><span class="chip chip-ahead">Ahead</span></td><td>Small, and the clearest expression of Principle 2</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F15 -->
+        <div class="modblock" data-mod="F15">
+          <div class="modhead"><h3>F15 — Maintenance and Drift</h3><span class="tally">7 features · 4 unique, 3 ahead, 0 parity</span></div>
+          <p class="featnote">The strongest module in the catalog. Every verdict is unique or ahead.</p>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="AHEAD"><td class="mono">F-15.1</td><td>Artifact versioning by SHA-256, re-ingest on change</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rivals version tests, not the source of truth the tests came from</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-15.2</td><td>Deterministic structural spec diff, not AI</td><td><span class="chip chip-unique">Unique</span></td><td>No competitor diffs the specification itself</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-15.3</td><td>Change classification: added, removed, signature, semantics</td><td><span class="chip chip-unique">Unique</span></td><td>Follows from F-15.2. Nobody else can compute it</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-15.4</td><td>Per-case decision: regenerate, mark stale, delete</td><td><span class="chip chip-unique">Unique</span></td><td>The actual product. Everything upstream exists to make this possible</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-15.5</td><td>User approves the proposed diff before anything applies</td><td><span class="chip chip-ahead">Ahead</span></td><td>Self-healing rivals apply changes silently, which is how a suite quietly stops asserting anything</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-15.6</td><td><code>superseded_by</code> history, restore a wrongly deleted case</td><td><span class="chip chip-unique">Unique</span></td><td>Nobody keeps test-case lineage</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-15.7</td><td>Scheduled drift check with notification</td><td><span class="chip chip-ahead">Ahead</span></td><td>Rivals detect broken selectors, not changed requirements</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note">
+            <h4>How rivals answer the same problem</h4>
+            <p>
+              Runtime self-healing (mabl, testRigor, Testsigma, Katalon, KaneAI, Momentic).
+              Self-healing fixes a locator that moved. It cannot notice that an endpoint
+              gained a required field and three test cases now assert the wrong thing.
+              Different problems. Qavia owns the second one and currently answers neither
+              the first, see section 08.
+            </p>
+          </div>
+        </div>
+
+        <!-- F16 -->
+        <div class="modblock" data-mod="F16">
+          <div class="modhead"><h3>F16 — AI Configuration</h3><span class="tally">13 features · 10 unique</span></div>
+          <p class="featnote">The moat. A SaaS rival sells you their model choice and cannot expose this even if it wanted to.</p>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="UNIQUE"><td class="mono">F-16.1</td><td>Seven provider kinds</td><td><span class="chip chip-unique">Unique</span></td><td>Rivals have one, chosen by them</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-16.2</td><td>Add a provider from the UI, no deploy</td><td><span class="chip chip-unique">Unique</span></td><td>Not a category any competitor has</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-16.3</td><td>Abstract tiers: reasoning, code, cheap, vision</td><td><span class="chip chip-unique">Unique</span></td><td>Internal architecture with a real user-facing consequence: model swap is a dropdown</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-16.4</td><td>Per-model capability matrix</td><td><span class="chip chip-unique">Unique</span></td><td>Nobody exposes it</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-16.5</td><td>Connection probe overwrites declared capabilities</td><td><span class="chip chip-ahead">Ahead</span></td><td>Correct: trust the probe, not the docs</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-16.6</td><td>Three prompt-caching strategies per provider</td><td><span class="chip chip-unique">Unique</span></td><td>The most technically distinctive feature in the plan</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-16.7</td><td>Structured output normalized across providers</td><td><span class="chip chip-ahead">Ahead</span></td><td>Solved elsewhere by libraries, but required here</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-16.8</td><td>Cross-provider fallback, records which provider served each call</td><td><span class="chip chip-ahead">Ahead</span></td><td>Uptime story no single-provider rival can tell</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-16.9</td><td>Per-call accounting: tokens, cache reads, cost, latency</td><td><span class="chip chip-unique">Unique</span></td><td>Rivals show run counts, never token economics</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-16.10</td><td>Spend ceiling with block or warn</td><td><span class="chip chip-unique">Unique</span></td><td>Rivals cap you by plan tier instead</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-16.11</td><td>Editable price table per model, no deploy</td><td><span class="chip chip-unique">Unique</span></td><td>Operational, and nobody needs it but us</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-16.12</td><td>Per-project provider pinning and data residency</td><td><span class="chip chip-unique">Unique</span></td><td><strong>The commercial differentiator.</strong> A client that cannot send code to a US API still gets a working platform. No top-10 competitor can offer this at any price</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-16.13</td><td><code>external_ai_approved</code> flag, admin-set, audited, enforced server-side</td><td><span class="chip chip-unique">Unique</span></td><td>The enforcement, not the flag, is the point</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- F17 -->
+        <div class="modblock" data-mod="F17">
+          <div class="modhead"><h3>F17 — Audit and Governance</h3><span class="tally">5 features</span></div>
+          <div class="table-wrap wide">
+            <table>
+              <thead><tr><th>ID</th><th>Feature</th><th>Verdict</th><th>Market note</th></tr></thead>
+              <tbody>
+                <tr data-v="PARITY"><td class="mono">F-17.1</td><td>Audit log: login, settings, runs, allowlists, approvals, secrets</td><td><span class="chip chip-parity">Parity</span></td><td>Enterprise tiers of Tricentis and Katalon</td></tr>
+                <tr data-v="AHEAD"><td class="mono">F-17.2</td><td>Runner command log keyed by run ID</td><td><span class="chip chip-ahead">Ahead</span></td><td>You cannot get this from a SaaS runner</td></tr>
+                <tr data-v="UNIQUE"><td class="mono">F-17.3</td><td>MCP call log with redacted arguments</td><td><span class="chip chip-unique">Unique</span></td><td>No vendor logs agent tool calls this way yet</td></tr>
+                <tr data-v="STAKES"><td class="mono">F-17.4</td><td>Secrets never in logs, responses, errors or notifications</td><td><span class="chip chip-stakes">Stakes</span></td><td>Universal requirement</td></tr>
+                <tr data-v="PARITY"><td class="mono">F-17.5</td><td>Configurable artifact retention</td><td><span class="chip chip-parity">Parity</span></td><td>Universal</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 07 ============================================== -->
+    <section id="scorecard">
+      <div class="eyebrow"><span class="n">07</span> Scorecard</div>
+      <h2>Where the differentiation actually sits</h2>
+
+      <div class="scorebars">
+        <div class="sb u"><span class="lab">Unique</span><span class="track"><i class="fill" style="width:19%"></i></span><span class="val">27 · 19%</span></div>
+        <div class="sb a"><span class="lab">Ahead</span><span class="track"><i class="fill" style="width:26%"></i></span><span class="val">37 · 26%</span></div>
+        <div class="sb p"><span class="lab">Parity</span><span class="track"><i class="fill" style="width:36%"></i></span><span class="val">52 · 36%</span></div>
+        <div class="sb s"><span class="lab">Stakes</span><span class="track"><i class="fill" style="width:12%"></i></span><span class="val">17 · 12%</span></div>
+        <div class="sb b"><span class="lab">Behind</span><span class="track"><i class="fill" style="width:8%"></i></span><span class="val">12 · 8%</span></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Module</th><th class="num">Unique</th><th>Reading</th></tr></thead>
+          <tbody>
+            <tr><td><strong>F16 AI configuration</strong></td><td class="num">10</td><td>The moat. Multi-provider plus data residency</td></tr>
+            <tr><td><strong>F15 Maintenance and drift</strong></td><td class="num">4</td><td>The second moat. Spec-diff-driven test lifecycle</td></tr>
+            <tr><td>F7 Execution</td><td class="num">3</td><td>Sandbox and allowlisting. Real but expensive</td></tr>
+            <tr><td>F1 Platform</td><td class="num">3</td><td>Internal mechanisms, no customer-visible value</td></tr>
+            <tr><td>F3, F5, F6, F12, F17</td><td class="num">7</td><td>Traceability and cost visibility, scattered</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note risk">
+        <h4>Blunt reading</h4>
+        <p>
+          48% of the catalog (parity plus stakes) buys no advantage over a tool that
+          already exists. Normal for a platform, but it means sequencing must protect the
+          19% that does. F15 and F16 are the answer to "why build this", and F16 ships in
+          Phase 1 while F15 ships in Phase 11, dead last.
+        </p>
+      </div>
+    </section>
+
+    <!-- 08 ============================================== -->
+    <section id="gaps">
+      <div class="eyebrow"><span class="n">08</span> What we lack</div>
+      <h2>Six absences. The first three get asked about in a demo</h2>
+
+      <div class="rows">
+
+        <div class="row">
+          <div class="rn">8.1</div>
+          <div>
+            <h3>Runtime self-healing, missing entirely</h3>
+            <p>
+              mabl, testRigor, Testsigma, Katalon, KaneAI and Momentic all repair a test
+              when a locator moves. Qavia's answer is F-6.12, a selector policy applied at
+              generation time, plus F-7.11 flake detection after the fact. Neither repairs
+              anything. A UI change breaks the suite and someone regenerates, which is the
+              exact maintenance burden rivals advertise having solved.
+            </p>
+            <div class="meta"><span class="chip chip-risk">Biggest gap</span> add intent-based locator resolution to Phase 7, or declare it out of scope in <code>requirements.md</code>. Do not leave it unaddressed</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">8.2</div>
+          <div>
+            <h3>Visual regression with baselines, missing</h3>
+            <p>
+              F-8.4 is a vision call on a screenshot. Applitools, Percy, mabl and Katalon
+              have baseline capture, diff engines, ignore regions and approval workflows.
+              Layout regressions are one of the top reasons teams buy a UI testing tool.
+            </p>
+            <div class="meta"><span class="chip chip-risk">Unresolved</span> wrap an open-source differ, or add it to the deferred list with a reason. It is currently neither</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">8.3</div>
+          <div>
+            <h3>Cross-browser and device coverage, one container</h3>
+            <p>
+              F-7.15 is a single bundled Playwright container. Testsigma advertises 800+
+              browser and OS combinations and 2,000+ real devices. Even Playwright's own
+              three engines are not stated as a matrix in the catalog.
+            </p>
+            <div class="meta"><span class="chip chip-accent">Cheap fix</span> Chromium, Firefox and WebKit for near zero extra work. Make it a per-project setting in Phase 7. Real devices stay out of scope</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">8.4</div>
+          <div>
+            <h3>Test impact selection, missing and cheap</h3>
+            <p>
+              Launchable, Datadog and Tricentis run only the tests a diff can affect. Qavia
+              has drift detection (F15) but no "this PR touched <code>LoginService</code>,
+              run these 14 tests".
+            </p>
+            <div class="meta"><span class="chip chip-accent">Add to Phase 6</span> low cost once F-6.11 and F-4.4 exist</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">8.5</div>
+          <div>
+            <h3>Test management depth, partial</h3>
+            <p>
+              F5 has cases, editing and approval. No test plans, no run cycles, no manual
+              test execution, no sign-off. TestRail, Xray and TestCollab are entire products
+              here.
+            </p>
+            <div class="meta"><span class="chip chip-plain">Correct to leave out</span> note it so nobody mistakes Qavia for a test management replacement</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rn">8.6</div>
+          <div>
+            <h3>Enterprise access plumbing, deferred</h3>
+            <p>
+              No SSO, SAML or SCIM in v1. Mobile (Appium), contract testing (Pact) and
+              accessibility all deferred. Every top-10 rival has at least three of those.
+            </p>
+            <div class="meta"><span class="chip chip-plain">Fine internally</span> all six become blocking the day Qavia takes external clients</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 09 ============================================== -->
+    <section id="bbw">
+      <div class="eyebrow"><span class="n">09</span> Build, buy, or wrap</div>
+      <h2>Concrete calls, derived from the behind rows</h2>
+
+      <div class="table-wrap wide">
+        <table>
+          <thead><tr><th>Qavia feature</th><th>Call</th><th>Instead</th></tr></thead>
+          <tbody>
+            <tr><td>F-10.6 to F-10.8 mock server</td><td><span class="chip chip-plain">Wrap</span></td><td>Prism or Microcks behind the capability interface. Saves most of Phase 8</td></tr>
+            <tr><td>F-11.3 security probes</td><td><span class="chip chip-plain">Wrap</span></td><td>OWASP ZAP or Nuclei in the runner. Keep F-6.6 targeting logic, drop the payload library</td></tr>
+            <tr><td>F-11.2 performance charts</td><td><span class="chip chip-plain">Wrap</span></td><td>k6 already emits Prometheus and JSON. Render, do not model</td></tr>
+            <tr><td>F-7.11, F-7.12 flake</td><td><span class="chip chip-plain">Buy the signal</span></td><td>Re-run detection is fine. Do not build quarantine analytics</td></tr>
+            <tr><td>F-6.3 unit tests</td><td><span class="chip chip-plain">Defer or wrap</span></td><td>Qodo and Diffblue are ahead. Only justified as part of one traceable pipeline</td></tr>
+            <tr><td>F-4.4 repository comprehension</td><td><span class="chip chip-plain">Wrap</span></td><td>Tree-sitter plus a code-tier model. Do not build a code intelligence engine</td></tr>
+            <tr><td>F-9.7 internal defect tracker</td><td><span class="chip chip-plain">Build minimal</span></td><td>Principle 5 requires it. Six fields, no workflow engine, no board</td></tr>
+            <tr><td>F-12.3 code coverage</td><td><span class="chip chip-plain">Wrap</span></td><td>The language's own tool, already the plan. Do not add a coverage UI</td></tr>
+            <tr><td><strong>F15 drift</strong></td><td><span class="chip chip-accent">Build</span></td><td>Nobody else has it. This is the product</td></tr>
+            <tr><td><strong>F16 AI configuration</strong></td><td><span class="chip chip-accent">Build</span></td><td>Nobody else can have it. This is the business case</td></tr>
+            <tr><td><strong>F-5.3, F-6.11, F-9.9 traceability</strong></td><td><span class="chip chip-accent">Build</span></td><td>Cheap, in Phase 0, and what makes F15 possible</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 10 ============================================== -->
+    <section id="plan">
+      <div class="eyebrow"><span class="n">10</span> Plan impact</div>
+      <h2>Nine things the landscape changes</h2>
+
+      <h3>From the market view</h3>
+      <div class="cards">
+        <div class="card">
+          <span class="k">01</span>
+          <h3>Breadth is the only defensible claim</h3>
+          <p>Every individual capability exists in a more mature product. Nine test types on one traceable pipeline does not. Finish the thin end-to-end line before making any single test type excellent.</p>
+        </div>
+        <div class="card">
+          <span class="k">02</span>
+          <h3>Data residency is the stronger claim</h3>
+          <p>Tier-not-provider plus a local model means a client who cannot send code to a US API still gets a working platform. Open Item 6 is not a nice-to-have, it is half the differentiator.</p>
+        </div>
+        <div class="card">
+          <span class="k">03</span>
+          <h3>Phase 6 and the API slice are the weakest build cases</h3>
+          <p>Qodo and Keploy already do those, cheaply or free. Neither should be built before the end-to-end line works, and both should be benchmarked before being called done.</p>
+        </div>
+        <div class="card">
+          <span class="k">04</span>
+          <h3>M2 needs a competitor as the baseline</h3>
+          <p>"A QA engineer says the cases are usable" is a low bar. Run the same spec through testRigor or a KaneAI trial and have the reviewer compare blind. "Better than the $15/month tool" is the real bar.</p>
+        </div>
+        <div class="card">
+          <span class="k">05</span>
+          <h3>The uncomfortable competitor is not in the table</h3>
+          <p>A QA engineer with Claude Code and a repo produces Playwright and Jest tests today, no platform, no build. Qavia beats that on orchestration, sandboxing, traceability and unattended runs. Not on raw generation quality.</p>
+        </div>
+      </div>
+
+      <h3>From the feature-level view</h3>
+      <div class="rows">
+        <div class="row">
+          <div class="rn">06</div>
+          <div>
+            <h3>F15 is last and should not be</h3>
+            <p>
+              Phase 11 holds four of the 27 unique features and the entire "keeping tests
+              correct" story that <code>features.md</code> itself calls the differentiating
+              module. A thin F15 (F-15.1 to F-15.3, deterministic, no AI) is buildable
+              right after Phase 2 because it needs nothing but <code>artifacts.sha256</code>
+              and a diff. Pulling it forward turns the demo from "it generates tests" into
+              "it noticed the spec changed", which is the part nobody else does.
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">07</div>
+          <div>
+            <h3>F16 is correctly early and is the business case</h3>
+            <p>
+              Phase 1 already holds ten unique features. F-16.12 and F-16.13 are what let
+              Hyscaler take client work under NDA. Open Item 6, local models at launch or
+              later, should be closed as <em>at launch</em>.
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">08</div>
+          <div>
+            <h3>Cut Phase 8 to F-10.1 through F-10.5</h3>
+            <p>
+              The mocking half is commodity. Wrapping Microcks preserves the feature for a
+              fraction of the effort.
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="rn">09</div>
+          <div>
+            <h3>Decide the Phase 7 gaps now, not in Phase 7</h3>
+            <p>
+              Self-healing, visual baselines and the browser matrix are three scope
+              decisions that change Phase 7's size materially. Phase 7 is already tagged XL.
+              Deciding them at the start of the phase is how XL becomes XXL.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h3>Open questions this raises</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Question</th><th>Needed by</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">1</td><td>Is a free Katalon or Keploy pilot an acceptable answer to the problem Qavia solves? Decide before Phase 2 sinks effort</td><td class="mono">Phase 2</td></tr>
+            <tr><td class="mono">2</td><td>Is Qavia ever intended for external clients? Changes whether multi-tenancy stays out of scope</td><td class="mono">Phase 0</td></tr>
+            <tr><td class="mono">3</td><td>Should Phase 7 add Momentic-style live-app crawling as a second input mode alongside specs?</td><td class="mono">Phase 7</td></tr>
+            <tr><td class="mono">4</td><td>Which competitor is the blind-comparison baseline at M2?</td><td class="mono">Phase 2</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 11 ============================================== -->
+    <section id="sources">
+      <div class="eyebrow"><span class="n">11</span> Sources</div>
+      <h2>Where the market claims come from</h2>
+
+      <p>Market research current to August 2026. Pricing and capability claims are vendor-published or from comparison write-ups dated 2026.</p>
+
+      <ul>
+        <li><a href="https://testcollab.com/blog/ai-test-case-generation-tools">10 Best AI Test Case Generation Tools (2026), TestCollab</a></li>
+        <li><a href="https://www.shiplight.ai/blog/best-ai-test-case-generation-tools-2026">10 Best AI Test Case Generation Tools in 2026 (Ranked), Shiplight AI</a></li>
+        <li><a href="https://www.shiplight.ai/blog/best-ai-testing-tools-2026">Best AI Testing Tools in 2026: 11 Platforms Compared, Shiplight AI</a></li>
+        <li><a href="https://securityboulevard.com/2026/06/top-13-ai-software-testing-in-2026/">Top 13 AI Software Testing in 2026, Security Boulevard</a></li>
+        <li><a href="https://getautonoma.com/blog/ai-testing-platform-comparison">AI Testing Platforms Compared: How to Choose in 2026, Autonoma</a></li>
+        <li><a href="https://qaskills.sh/blog/qa-wolf-ai-testing-guide-2026">QA Wolf Review 2026: Managed E2E Testing, Pricing Model, and Alternatives, QASkills</a></li>
+        <li><a href="https://testeragents.com/pricing/qa-wolf/">QA Wolf pricing in 2026: managed-service economics, testeragents.com</a></li>
+        <li><a href="https://www.testingtools.ai/tools/kane-ai/">Kane AI reviews, features, pricing, testingtools.ai</a></li>
+        <li><a href="https://medium.com/@jacobmilller65/7-ai-testing-tools-compared-features-pricing-and-what-actually-works-01f1901ff96f">7 AI Testing Tools Compared: Features, Pricing, Medium</a></li>
+        <li><a href="https://dev.to/rahulxsingh/qodo-vs-diffblue-ai-test-generation-compared-4b05">Qodo vs Diffblue: AI Test Generation Compared, DEV</a></li>
+        <li><a href="https://keploy.io/api-testing">Keploy AI API testing</a></li>
+        <li><a href="https://totalshiftleft.ai/blog/how-ai-generates-api-tests-from-openapi">How AI Generates API Tests from OpenAPI, TotalShiftLeft</a></li>
+        <li><a href="https://www.tricentis.com/blog/qa-trends-ai-agentic-testing">QA trends for 2026: AI, agents, and the future of testing, Tricentis</a></li>
+        <li><a href="https://katalon.com/resources-center/blog/what-is-agentic-qa-the-complete-guide-for-2026">What Is Agentic QA? The Complete Guide for 2026, Katalon</a></li>
+        <li><a href="https://codenote.net/en/posts/ai-software-testing-startups-2026/">AI Software Testing Startups: The Definitive 2026 Guide</a></li>
+      </ul>
+
+      <p>
+        Companion documents: <a href="./competitors.md">competitors.md</a> (same analysis in
+        Markdown), <a href="./features.md">features.md</a> (the catalog scored here),
+        <a href="./presentation.html">presentation.html</a> (the platform walkthrough).
+      </p>
+    </section>
+
+    <div class="end">
+      Qavia · competitive analysis · 145 features scored against 10 competitors · internal Hyscaler
+    </div>
+
+  </main>
+</div>
+
+<script>
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail-index a'));
+    var ids = links.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections = ids.map(function (id) { return document.getElementById(id); }).filter(Boolean);
+    var bar = document.getElementById('progbar');
+
+    function setCurrent(id) {
+      links.forEach(function (a) {
+        if (a.getAttribute('href') === '#' + id) { a.setAttribute('aria-current', 'true'); }
+        else { a.removeAttribute('aria-current'); }
+      });
+    }
+
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        var best = null;
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) { return; }
+          if (!best || e.intersectionRatio > best.intersectionRatio) { best = e; }
+        });
+        if (best) { setCurrent(best.target.id); }
+      }, { rootMargin: '-12% 0px -72% 0px', threshold: [0, 0.2, 0.5, 1] });
+      sections.forEach(function (s) { io.observe(s); });
+    } else {
+      setCurrent(ids[0]);
+    }
+
+    function onScroll() {
+      var h = document.documentElement;
+      var max = h.scrollHeight - h.clientHeight;
+      if (bar) { bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%'; }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    function currentIndex() {
+      var y = window.scrollY + window.innerHeight * 0.2;
+      var idx = 0;
+      sections.forEach(function (s, i) { if (s.offsetTop <= y) { idx = i; } });
+      return idx;
+    }
+
+    document.addEventListener('keydown', function (e) {
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) { return; }
+      if (e.metaKey || e.ctrlKey || e.altKey) { return; }
+
+      var k = e.key, dir = 0;
+      if (k === 'j' || k === 'J' || k === 'ArrowDown' || k === 'PageDown') { dir = 1; }
+      else if (k === 'k' || k === 'K' || k === 'ArrowUp' || k === 'PageUp') { dir = -1; }
+      else { return; }
+
+      e.preventDefault();
+      var next = Math.min(sections.length - 1, Math.max(0, currentIndex() + dir));
+      sections[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setCurrent(sections[next].id);
+    });
+
+    /* ---- verdict filter over the feature tables ---- */
+    var bar2 = document.getElementById('filters');
+    if (!bar2) { return; }
+    var buttons = Array.prototype.slice.call(bar2.querySelectorAll('button'));
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#modules tr[data-v]'));
+    var blocks = Array.prototype.slice.call(document.querySelectorAll('#modules .modblock'));
+    var readout = document.getElementById('fcount');
+
+    var labels = {
+      all: 'features',
+      UNIQUE: 'unique, no rival has these',
+      AHEAD: 'ahead on design',
+      PARITY: 'at parity with the market',
+      STAKES: 'self-host table stakes',
+      BEHIND: 'behind a shipping tool'
+    };
+
+    function apply(f) {
+      var shown = 0;
+      rows.forEach(function (tr) {
+        var on = (f === 'all' || tr.getAttribute('data-v') === f);
+        tr.hidden = !on;
+        if (on) { shown++; }
+      });
+      blocks.forEach(function (b) {
+        var any = Array.prototype.slice.call(b.querySelectorAll('tr[data-v]'))
+          .some(function (tr) { return !tr.hidden; });
+        b.hidden = !any;
+      });
+      buttons.forEach(function (b) {
+        b.setAttribute('aria-pressed', b.getAttribute('data-f') === f ? 'true' : 'false');
+      });
+      if (readout) { readout.textContent = shown + ' ' + labels[f]; }
+    }
+
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () { apply(b.getAttribute('data-f')); });
+    });
+  }());
+</script>
+</body>
+</html>

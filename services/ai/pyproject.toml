@@ -1,0 +1,61 @@
+[project]
+name = "qavia-ai"
+version = "0.1.0"
+description = "Qavia AI service. Stateless, no database, runs agents only."
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastapi==0.141.1",
+    "uvicorn[standard]==0.52.1",
+    "pydantic==2.13.4",
+    "pydantic-settings==2.15.0",
+    "httpx==0.28.1",
+    "python-json-logger==4.1.0",
+    "jsonschema>=4.26.0",
+]
+
+[project.optional-dependencies]
+# The LangChain family is pinned exactly. The ecosystem moves fast and minor
+# releases have broken interfaces before; upgrade deliberately with the agent
+# test suite as the gate (tech-stack.md 15). Provider packages are added here in
+# BE-1.4, under the same rule.
+llm = [
+    "langchain-core==1.5.3",
+    "langgraph==1.2.10",
+    "langchain-anthropic==1.5.4",
+    "langchain-aws==1.7.0",
+    "langchain-google-genai==4.3.3",
+    "langchain-google-vertexai==3.2.4",
+    "langchain-openai==1.4.3",
+    # MCP is bridged into LangChain tools here rather than per provider, so every
+    # provider that supports tool calling gets the same MCP capability through one path
+    # (ai-architecture.md 5.3, BE-10.1.4).
+    "langchain-mcp-adapters>=0.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "ruff==0.16.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S", "RUF"]
+# S101: pytest uses bare assert.
+ignore = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

@@ -1,0 +1,156 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  # Must match the toolchain directive in api/go.mod.
+  GO_VERSION: "1.25.0"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+      - name: go vet
+        working-directory: api
+        run: go vet ./...
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: v2.7.1
+          working-directory: api
+
+  # go.sum and generated code are committed. A stale artifact must not merge.
+  generate-check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: qavia
+          POSTGRES_PASSWORD: qavia
+          POSTGRES_DB: qavia
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U qavia"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      DATABASE_URL: postgres://qavia:qavia@localhost:5432/qavia?sslmode=disable
+      PGPASSWORD: qavia
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: make tools
+      - name: go mod tidy is clean
+        run: |
+          make tidy
+          git diff --exit-code -- api/go.mod api/go.sum
+      - name: generated code is current
+        run: |
+          make gen
+          git diff --exit-code
+      - name: schema.sql matches the migrations
+        run: |
+          make schema QAVIA_PG_IN_DOCKER=0
+          git diff --exit-code -- api/schema.sql
+
+  test-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+      # Integration suites bring up their own Postgres and Redis through
+      # testcontainers, so no service containers are declared here. The race
+      # detector is not optional: the API drives containers, fans out SSE, and
+      # runs bounded worker pools (tech-stack.md 13).
+      - name: go test -race
+        working-directory: api
+        run: go test -race ./...
+
+  # Every migration must apply and roll back. A Down that was never run is not a
+  # rollback plan (backend-standards.md 9).
+  migrate-check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: qavia
+          POSTGRES_PASSWORD: qavia
+          POSTGRES_DB: qavia
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U qavia"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      DATABASE_URL: postgres://qavia:qavia@localhost:5432/qavia?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: api/go.sum
+      - run: make tools
+      - name: up then down then up
+        working-directory: api
+        run: |
+          goose -dir migrations postgres "$DATABASE_URL" up
+          goose -dir migrations postgres "$DATABASE_URL" reset
+          goose -dir migrations postgres "$DATABASE_URL" up
+
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: ruff
+        working-directory: services/ai
+        run: uv run ruff check .
+      - name: pytest
+        working-directory: services/ai
+        run: uv run pytest
+
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: scaffolded
+        run: |
+          if [ -f web/next.config.ts ] || [ -f web/next.config.js ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "web is not scaffolded yet (FE-S.1); skipping"
+          fi
+      - uses: pnpm/action-setup@v4
+        if: steps.scaffolded.outputs.ready == 'true'
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        if: steps.scaffolded.outputs.ready == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - if: steps.scaffolded.outputs.ready == 'true'
+        working-directory: web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm test --run

@@ -1,0 +1,8 @@
+{
+  "rootDir": "/workspace",
+  "testEnvironment": "node",
+  "testMatch": ["**/*.test.js", "**/*.spec.js", "**/*.test.mjs", "**/*.spec.mjs"],
+  "modulePaths": ["/opt/qavia/node_modules"],
+  "cache": false,
+  "reporters": ["default"]
+}

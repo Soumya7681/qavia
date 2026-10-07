@@ -1,0 +1,2498 @@
+{
+  "components": {
+    "schemas": {
+      "AgentResult": {
+        "description": "One agent's output, plus what it cost.\n\nThe result is the agent's own schema, kept as a dict rather than typed per\nagent: the shape is the JSON Schema the agent declared, Go validates against\nthe same one, and a second Pydantic model here would be a third place for the\nthree to disagree.",
+        "properties": {
+          "latency_ms": {
+            "default": 0,
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          },
+          "served_by": {
+            "$ref": "#/components/schemas/ServedBy"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          },
+          "validation_retries": {
+            "default": 0,
+            "title": "Validation Retries",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "result",
+          "served_by"
+        ],
+        "title": "AgentResult",
+        "type": "object"
+      },
+      "AnalyseRequest": {
+        "description": "One failure, with the material an explanation may cite (BE-5.2).\n\n``context`` is the cacheable prefix: the run log, the captured response, and the\nsource of the failing test. A run with forty failures analyses forty times against\nthe same log, so paying full price for it forty times is the difference between\nthis feature being affordable and not.",
+        "properties": {
+          "attempt": {
+            "default": 1,
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "context": {
+            "additionalProperties": true,
+            "title": "Context",
+            "type": "object"
+          },
+          "failure_message": {
+            "default": "",
+            "title": "Failure Message",
+            "type": "string"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "feedback": {
+            "default": "",
+            "title": "Feedback",
+            "type": "string"
+          },
+          "history": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "status": {
+            "default": "failed",
+            "title": "Status",
+            "type": "string"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          },
+          "test_name": {
+            "default": "",
+            "title": "Test Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "AnalyseRequest",
+        "type": "object"
+      },
+      "CacheCreateRequest": {
+        "description": "Creates a provider-side context cache for a fan-out.",
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          },
+          "ttl_seconds": {
+            "default": 900,
+            "title": "Ttl Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "target",
+          "messages"
+        ],
+        "title": "CacheCreateRequest",
+        "type": "object"
+      },
+      "CacheDeleteRequest": {
+        "description": "Teardown for a cache object, run at chain end including on failure.",
+        "properties": {
+          "api_key": {
+            "title": "Api Key",
+            "type": "string"
+          },
+          "handle": {
+            "title": "Handle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "api_key",
+          "handle"
+        ],
+        "title": "CacheDeleteRequest",
+        "type": "object"
+      },
+      "CacheDeleteResult": {
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "CacheDeleteResult",
+        "type": "object"
+      },
+      "CacheHandle": {
+        "properties": {
+          "created": {
+            "default": false,
+            "title": "Created",
+            "type": "boolean"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "handle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handle"
+          }
+        },
+        "title": "CacheHandle",
+        "type": "object"
+      },
+      "Capabilities": {
+        "description": "What a model can actually do (ai-architecture.md 3.4).\n\nProviders are not interchangeable, and pretending otherwise produces runtime\nfailures a user cannot act on. Gating features on this is what turns \"the model\ncannot do that\" into a disabled option with a reason.",
+        "properties": {
+          "effort_control": {
+            "default": false,
+            "title": "Effort Control",
+            "type": "boolean"
+          },
+          "max_tool_iterations": {
+            "default": 30,
+            "title": "Max Tool Iterations",
+            "type": "integer"
+          },
+          "prompt_caching": {
+            "$ref": "#/components/schemas/PromptCaching",
+            "default": "none"
+          },
+          "structured_output": {
+            "$ref": "#/components/schemas/StructuredOutputMode",
+            "default": "native"
+          },
+          "tool_use": {
+            "default": true,
+            "title": "Tool Use",
+            "type": "boolean"
+          },
+          "vision": {
+            "default": false,
+            "title": "Vision",
+            "type": "boolean"
+          }
+        },
+        "title": "Capabilities",
+        "type": "object"
+      },
+      "ChatRequest": {
+        "description": "One completion, with everything needed to make it.",
+        "properties": {
+          "agent": {
+            "description": "Which agent asked, recorded on the llm_calls row.",
+            "title": "Agent",
+            "type": "string"
+          },
+          "cache_handle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Handle"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "response_schema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Schema"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          },
+          "temperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature"
+          },
+          "tier": {
+            "$ref": "#/components/schemas/Tier"
+          }
+        },
+        "required": [
+          "tier",
+          "agent",
+          "target",
+          "messages"
+        ],
+        "title": "ChatRequest",
+        "type": "object"
+      },
+      "ChatResponse": {
+        "properties": {
+          "cache_handle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Handle"
+          },
+          "latency_ms": {
+            "default": 0,
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "served_by": {
+            "$ref": "#/components/schemas/ServedBy"
+          },
+          "structured": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structured"
+          },
+          "text": {
+            "default": "",
+            "title": "Text",
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          },
+          "validation_retries": {
+            "default": 0,
+            "title": "Validation Retries",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "served_by"
+        ],
+        "title": "ChatResponse",
+        "type": "object"
+      },
+      "CodegenRequest": {
+        "description": "One endpoint's file, from its approved cases.",
+        "properties": {
+          "cases": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Cases",
+            "type": "array"
+          },
+          "document": {
+            "additionalProperties": true,
+            "title": "Document",
+            "type": "object"
+          },
+          "endpoint": {
+            "default": "",
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "feedback": {
+            "default": "",
+            "title": "Feedback",
+            "type": "string"
+          },
+          "framework": {
+            "default": "supertest",
+            "title": "Framework",
+            "type": "string"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "suggested_path": {
+            "default": "api.test.ts",
+            "title": "Suggested Path",
+            "type": "string"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target",
+          "document"
+        ],
+        "title": "CodegenRequest",
+        "type": "object"
+      },
+      "DedupeRequest": {
+        "description": "The near-miss pass. Exact duplicates never get here.",
+        "properties": {
+          "candidates": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "existing": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Existing",
+            "type": "array"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "DedupeRequest",
+        "type": "object"
+      },
+      "DesignRequest": {
+        "description": "One call per requirement, sharing the specification as a cached prefix.",
+        "properties": {
+          "document": {
+            "additionalProperties": true,
+            "title": "Document",
+            "type": "object"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "requirement": {
+            "additionalProperties": true,
+            "title": "Requirement",
+            "type": "object"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target",
+          "document",
+          "requirement"
+        ],
+        "title": "DesignRequest",
+        "type": "object"
+      },
+      "ErrorKind": {
+        "description": "Why a call failed, in terms the gateway can act on.\n\n``retryable`` is the only kind that triggers cross-provider fallback. A\n``bad_request`` retried on another provider is a bad request twice.",
+        "enum": [
+          "retryable",
+          "bad_request",
+          "auth",
+          "not_supported",
+          "validation",
+          "internal"
+        ],
+        "title": "ErrorKind",
+        "type": "string"
+      },
+      "ErrorResponse": {
+        "description": "The error envelope. Mirrors Go's {code, message, details}.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ErrorKind",
+            "default": "internal"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "ExtractRequest": {
+        "description": "Extraction reads the parsed specification, never the raw file.",
+        "properties": {
+          "document": {
+            "additionalProperties": true,
+            "title": "Document",
+            "type": "object"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target",
+          "document"
+        ],
+        "title": "ExtractRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "MCPDiscoverRequest": {
+        "description": "A server to connect to and list the tools of (BE-10.1).\n\nGo owns the configuration and the credential; this carries them for one connection\nand this service holds neither afterwards.",
+        "properties": {
+          "args": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Args",
+            "type": "array"
+          },
+          "command": {
+            "default": "",
+            "title": "Command",
+            "type": "string"
+          },
+          "credential": {
+            "default": "",
+            "title": "Credential",
+            "type": "string"
+          },
+          "transport": {
+            "default": "stdio",
+            "title": "Transport",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "title": "MCPDiscoverRequest",
+        "type": "object"
+      },
+      "MCPDiscoverResponse": {
+        "description": "The tools a connection test found.",
+        "properties": {
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/MCPTool"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "title": "MCPDiscoverResponse",
+        "type": "object"
+      },
+      "MCPTool": {
+        "description": "One tool a server exposes.",
+        "properties": {
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "write": {
+            "default": false,
+            "title": "Write",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "MCPTool",
+        "type": "object"
+      },
+      "Message": {
+        "properties": {
+          "cacheable": {
+            "default": false,
+            "title": "Cacheable",
+            "type": "boolean"
+          },
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "Message",
+        "type": "object"
+      },
+      "Model": {
+        "description": "The model to run, and what it can do.",
+        "properties": {
+          "capabilities": {
+            "$ref": "#/components/schemas/Capabilities"
+          },
+          "effort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effort"
+          },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Output Tokens"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model_id"
+        ],
+        "title": "Model",
+        "type": "object"
+      },
+      "PerfRequest": {
+        "description": "A k6 load script from the API's endpoints under an authorised profile (BE-9.1).\n\nThe profile is fixed by whoever authorised the test; ``endpoints`` is the cacheable\nprefix, so generating a heavier variant reuses it.",
+        "properties": {
+          "endpoints": {
+            "additionalProperties": true,
+            "title": "Endpoints",
+            "type": "object"
+          },
+          "error_rate": {
+            "default": 0.01,
+            "title": "Error Rate",
+            "type": "number"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "p95_ms": {
+            "default": 500,
+            "title": "P95 Ms",
+            "type": "integer"
+          },
+          "profile": {
+            "default": "",
+            "title": "Profile",
+            "type": "string"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "PerfRequest",
+        "type": "object"
+      },
+      "ProbeRequest": {
+        "description": "Confirms what a model can really do (BE-1.10).",
+        "properties": {
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "ProbeRequest",
+        "type": "object"
+      },
+      "ProbeResult": {
+        "description": "Detected capability. It overwrites declared capability, because a\ndeclaration is a claim and this is a measurement.",
+        "properties": {
+          "chat": {
+            "default": false,
+            "title": "Chat",
+            "type": "boolean"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "latency_ms": {
+            "default": 0,
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "reachable": {
+            "title": "Reachable",
+            "type": "boolean"
+          },
+          "structured_output": {
+            "default": false,
+            "title": "Structured Output",
+            "type": "boolean"
+          },
+          "tool_use": {
+            "default": false,
+            "title": "Tool Use",
+            "type": "boolean"
+          },
+          "vision": {
+            "default": false,
+            "title": "Vision",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reachable"
+        ],
+        "title": "ProbeResult",
+        "type": "object"
+      },
+      "ProbeSelectRequest": {
+        "description": "Which endpoints and payload IDs to point a security probe at (BE-9.3).\n\nThe catalogue carries payload IDs and purposes, never the payload strings: the\nstrings live in a reviewed Go library, and the agent's only job is to choose which\nreviewed entry to aim where. A plan that named a raw payload would be refused.",
+        "properties": {
+          "catalogue": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Catalogue",
+            "type": "array"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "endpoints": {
+            "additionalProperties": true,
+            "title": "Endpoints",
+            "type": "object"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "ProbeSelectRequest",
+        "type": "object"
+      },
+      "PromptCaching": {
+        "enum": [
+          "explicit",
+          "automatic",
+          "none"
+        ],
+        "title": "PromptCaching",
+        "type": "string"
+      },
+      "Provider": {
+        "description": "One configured provider, as Go resolved it.",
+        "properties": {
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "credentials": {
+            "additionalProperties": true,
+            "title": "Credentials",
+            "type": "object"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ProviderKind"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "Provider",
+        "type": "object"
+      },
+      "ProviderKind": {
+        "description": "The provider kinds from ai-architecture.md 3.1.\n\n``openai_compatible`` is the row that makes \"any other provider\" real: one\nadapter covers Ollama, vLLM, LiteLLM, OpenRouter, Together, Groq, Fireworks,\nand DeepSeek.",
+        "enum": [
+          "anthropic",
+          "bedrock",
+          "vertex",
+          "openai",
+          "azure-openai",
+          "gemini",
+          "openai-compatible"
+        ],
+        "title": "ProviderKind",
+        "type": "string"
+      },
+      "ProviderKinds": {
+        "properties": {
+          "kinds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Kinds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kinds"
+        ],
+        "title": "ProviderKinds",
+        "type": "object"
+      },
+      "RepoStepRequest": {
+        "description": "One step of a repository exploration (BE-6.4).\n\nThe tools run in Go, which owns the checkout and the path validation, so this\nrequest carries what has been seen rather than a filesystem handle. ``tree`` is the\ncacheable prefix: thirty steps over one repository are one cached prefix plus\nthirty short suffixes.",
+        "properties": {
+          "budget": {
+            "default": 30,
+            "title": "Budget",
+            "type": "integer"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "history": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "stack": {
+            "default": "",
+            "title": "Stack",
+            "type": "string"
+          },
+          "step": {
+            "default": 1,
+            "title": "Step",
+            "type": "integer"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          },
+          "tree": {
+            "additionalProperties": true,
+            "title": "Tree",
+            "type": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "RepoStepRequest",
+        "type": "object"
+      },
+      "Role": {
+        "enum": [
+          "system",
+          "user",
+          "assistant"
+        ],
+        "title": "Role",
+        "type": "string"
+      },
+      "ServedBy": {
+        "description": "Which provider actually answered.\n\nRecorded because a cross-provider fallback moves the cost to a different price\nlist, and attribution that assumed the primary would be wrong.",
+        "properties": {
+          "fallback_used": {
+            "default": false,
+            "title": "Fallback Used",
+            "type": "boolean"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "provider_kind": {
+            "$ref": "#/components/schemas/ProviderKind"
+          }
+        },
+        "required": [
+          "provider_kind",
+          "model_id"
+        ],
+        "title": "ServedBy",
+        "type": "object"
+      },
+      "StructuredOutputMode": {
+        "enum": [
+          "native",
+          "tool_based",
+          "prompt_only"
+        ],
+        "title": "StructuredOutputMode",
+        "type": "string"
+      },
+      "Target": {
+        "description": "A provider and model pair the gateway can build a client from.",
+        "properties": {
+          "model": {
+            "$ref": "#/components/schemas/Model"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/Provider"
+          }
+        },
+        "required": [
+          "provider",
+          "model"
+        ],
+        "title": "Target",
+        "type": "object"
+      },
+      "TestDataRequest": {
+        "description": "Realistic values for the handful of fields a faker cannot write (BE-8.2).\n\nOne call for the whole batch rather than one per record: bulk generation is\ndeliberately not an AI feature, and this is the narrow exception where semantics\nmatter.",
+        "properties": {
+          "context": {
+            "additionalProperties": true,
+            "title": "Context",
+            "type": "object"
+          },
+          "count": {
+            "default": 10,
+            "title": "Count",
+            "type": "integer"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fields": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "locale": {
+            "default": "",
+            "title": "Locale",
+            "type": "string"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "TestDataRequest",
+        "type": "object"
+      },
+      "Tier": {
+        "description": "What a call is for, rather than which model runs it.\n\nAn agent asks for a tier. Which model serves it is a settings decision, which\nis what keeps provider switching a dropdown change forever.",
+        "enum": [
+          "reasoning",
+          "code",
+          "cheap",
+          "vision"
+        ],
+        "title": "Tier",
+        "type": "string"
+      },
+      "UIFlowRequest": {
+        "description": "One step of a UI flow discovery (BE-7.2).\n\nThe browser lives in a worker's container, whose egress allowlist, credentials, and\nreaping already govern it, so this request carries what the last action showed\nrather than a browser handle. ``context`` is the cacheable prefix: forty steps\nagainst one application are one cached prefix plus forty short suffixes.",
+        "properties": {
+          "app_url": {
+            "default": "",
+            "title": "App Url",
+            "type": "string"
+          },
+          "auth": {
+            "default": "none",
+            "title": "Auth",
+            "type": "string"
+          },
+          "budget": {
+            "default": 40,
+            "title": "Budget",
+            "type": "integer"
+          },
+          "context": {
+            "additionalProperties": true,
+            "title": "Context",
+            "type": "object"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "history": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "step": {
+            "default": 1,
+            "title": "Step",
+            "type": "integer"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "UIFlowRequest",
+        "type": "object"
+      },
+      "UISpecRequest": {
+        "description": "One discovered flow's Playwright spec (BE-7.4).\n\n``graph`` is the cacheable prefix: the pages and what can be done on each do not\nchange between the flows of one application, so a suite is one cached prefix plus\none short instruction per flow. A regeneration after a rejected selector reuses it.",
+        "properties": {
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "feedback": {
+            "default": "",
+            "title": "Feedback",
+            "type": "string"
+          },
+          "flow": {
+            "additionalProperties": true,
+            "title": "Flow",
+            "type": "object"
+          },
+          "graph": {
+            "additionalProperties": true,
+            "title": "Graph",
+            "type": "object"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "UISpecRequest",
+        "type": "object"
+      },
+      "UnitTestRequest": {
+        "description": "One untested target's test file (BE-6.5).\n\n``source`` is the cacheable prefix: the target's own code and its neighbours. A\nregeneration after a validation failure reuses it, so a correction costs a cache\nread plus a short instruction rather than the whole file again.",
+        "properties": {
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Target"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "feedback": {
+            "default": "",
+            "title": "Feedback",
+            "type": "string"
+          },
+          "file": {
+            "default": "",
+            "title": "File",
+            "type": "string"
+          },
+          "framework": {
+            "default": "",
+            "title": "Framework",
+            "type": "string"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "max_validation_retries": {
+            "default": 2,
+            "title": "Max Validation Retries",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "source": {
+            "additionalProperties": true,
+            "title": "Source",
+            "type": "object"
+          },
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Symbols",
+            "type": "array"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "title": "UnitTestRequest",
+        "type": "object"
+      },
+      "Usage": {
+        "description": "What the call cost, in tokens. Go turns this into money and a row.",
+        "properties": {
+          "cache_read_tokens": {
+            "default": 0,
+            "title": "Cache Read Tokens",
+            "type": "integer"
+          },
+          "cache_write_tokens": {
+            "default": 0,
+            "title": "Cache Write Tokens",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "default": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "title": "Usage",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Stateless agent runner. Holds no persistence and no business logic.",
+    "title": "Qavia AI Service",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "getAIHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Healthz"
+      }
+    },
+    "/v1/agents/analyse": {
+      "post": {
+        "description": "Reasoning tier, because this is the hardest thing the platform asks a model to\ndo: read a log, a response body, and a test, and say which of them is wrong.\n\nEvery citation the analysis makes is checked by Go against the material before the\nrow is stored, and a failed check comes back here as feedback rather than being\nsilently accepted (BE-5.3).",
+        "operationId": "runAnalyseAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Explain why a test failed, with citations"
+      }
+    },
+    "/v1/agents/codegen": {
+      "post": {
+        "description": "The envelope is schema-locked and the content is code.\n\nGo needs the path and the covered case IDs to store the file and to trace it,\nand neither can be recovered reliably from prose wrapped around a code block.",
+        "operationId": "runCodegenAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CodegenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Turn approved test cases into a runnable file"
+      }
+    },
+    "/v1/agents/dedupe": {
+      "post": {
+        "description": "The near-miss fallback only, on the cheap tier. Exact duplicates were\ncaught by a hash before this was called.",
+        "operationId": "runDedupeAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DedupeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Decide which candidates duplicate a stored case"
+      }
+    },
+    "/v1/agents/design": {
+      "post": {
+        "description": "One requirement per call, with the specification as a cached prefix. Go\nbounds how many of these run at once.",
+        "operationId": "runDesignAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DesignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Design test cases for one requirement"
+      }
+    },
+    "/v1/agents/extract": {
+      "post": {
+        "description": "Reads the normalized model rather than the uploaded file: deterministic\ncode already parsed it, and a model asked to re-read JSON structure would be\nslower, cost money, and be wrong occasionally rather than never.",
+        "operationId": "runExtractAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Extract requirements from a parsed specification"
+      }
+    },
+    "/v1/agents/perf": {
+      "post": {
+        "description": "The load profile is a person's decision, fixed in the request; the model writes\nthe script that exercises the endpoints under it. Validated in the k6 image before\nit makes a single request (BE-9.1).",
+        "operationId": "runPerfAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerfRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Generate a k6 load script under an authorised profile"
+      }
+    },
+    "/v1/agents/probe-select": {
+      "post": {
+        "description": "The agent picks endpoints and payload IDs from the catalogue; it never writes a\npayload string. The strings live in a reviewed Go library, and a plan naming a raw\npayload is refused (BE-9.3).",
+        "operationId": "runProbeSelectAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProbeSelectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Choose which endpoints and library payloads to probe"
+      }
+    },
+    "/v1/agents/repo-step": {
+      "post": {
+        "description": "One step, not a loop. Go executes the chosen tool against the checkout it owns\nand calls back with the result, because the process that owns the filesystem is\nthe one that can safely validate a path (BE-6.4).",
+        "operationId": "runRepoStepAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepoStepRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Choose the next step of a repository exploration"
+      }
+    },
+    "/v1/agents/testdata": {
+      "post": {
+        "description": "Named fields only, on the cheap tier, one call for the whole batch. The bulk of\na generated set comes from a seeded faker in Go: it is free, instant, and identical\nevery run, and a model asked for two thousand values would cost money to be\noccasionally wrong (BE-8.2).",
+        "operationId": "runTestDataAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestDataRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Write realistic values for named fields"
+      }
+    },
+    "/v1/agents/uiflow-step": {
+      "post": {
+        "description": "One step, not a loop. The browser runs in a worker's container, so Go performs\nthe action and calls back with what the page looked like afterwards: the process\nthat owns the container is the one that can validate an action against the\nvocabulary, hold the budget, and substitute a credential without showing it to a\nmodel (BE-7.2, BE-7.3.2).",
+        "operationId": "runUIFlowStepAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UIFlowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Choose the next step of a UI flow discovery"
+      }
+    },
+    "/v1/agents/uispec": {
+      "post": {
+        "description": "One call per flow, on the code tier. The selector policy is stated in the prompt\nand enforced in Go afterwards: a spec that reaches for a positional selector is\nrejected and regenerated rather than merged with a warning (BE-7.4.2).",
+        "operationId": "runUISpecAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UISpecRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Turn one discovered flow into a Playwright spec"
+      }
+    },
+    "/v1/agents/unittest": {
+      "post": {
+        "description": "One call per target, on the code tier. The framework comes from the repository's\nown manifest, and the file goes through the same static validation as generated API\ntests: compiled and scanned in the image that owns the toolchain (BE-3.4).",
+        "operationId": "runUnitTestAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnitTestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Write a unit test for one untested target"
+      }
+    },
+    "/v1/cache": {
+      "post": {
+        "description": "Only Gemini has one. Everyone else answers not-created, which is not an\nerror: the caller proceeds and the cost model is linear.",
+        "operationId": "createCacheObject",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CacheCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheHandle"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create a provider-side context cache for a fan-out"
+      }
+    },
+    "/v1/cache/delete": {
+      "post": {
+        "description": "A DELETE with a body would be the honest verb, but a cache handle and an API\nkey do not belong in a URL: both end up in proxy logs.",
+        "operationId": "deleteCacheObject",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CacheDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheDeleteResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Release a context cache"
+      }
+    },
+    "/v1/chat": {
+      "post": {
+        "description": "Everything an agent asks for goes through here.\n\nCredentials arrive decrypted in the request and are used for this call only.\nUsage comes back in the response and is never written here: Go owns\n``llm_calls`` (backend-standards.md 10).",
+        "operationId": "chatCompletion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Run one completion"
+      }
+    },
+    "/v1/mcp/discover": {
+      "post": {
+        "description": "The connection test. Go owns the server configuration and its credential and\npasses them here; this service connects via langchain-mcp-adapters, lists the tools,\nand returns them so an admin can opt into specific ones (BE-10.1).",
+        "operationId": "discoverMCPTools",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MCPDiscoverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MCPDiscoverResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "Connect to an MCP server and list its tools"
+      }
+    },
+    "/v1/probe": {
+      "post": {
+        "description": "Backs the Test connection button. Detected capability overwrites declared.",
+        "operationId": "probeModel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProbeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProbeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detect what a model can actually do"
+      }
+    },
+    "/v1/providers": {
+      "get": {
+        "description": "Read by the settings screen, so a build without a provider package installed\ncannot offer a kind it would fail on.",
+        "operationId": "listProviderKinds",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderKinds"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Provider kinds this build can serve"
+      }
+    }
+  }
+}

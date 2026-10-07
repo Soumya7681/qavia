@@ -1,0 +1,67 @@
+version: "2"
+
+# Style is not a review conversation. These run in CI and gate merge
+# (tech-stack.md 3, backend-standards.md 14).
+
+linters:
+  default: standard
+  enable:
+    # Unchecked errors and leaked rows or response bodies are the two most
+    # common Go defects, and both are mechanically detectable.
+    - errcheck
+    - staticcheck
+    - govet
+    - bodyclose
+    - sqlclosecheck
+    - rowserrcheck
+    - errorlint
+    - contextcheck
+    - noctx
+    - gosec
+    - misspell
+    - unconvert
+    - nilerr
+    - forbidigo
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    forbidigo:
+      # Structured logging only. No fmt.Println or log.Printf in committed code
+      # (backend-standards.md 12). cmd/ is exempt below for boot failures that
+      # happen before a logger exists.
+      forbid:
+        - pattern: "^fmt\\.Print.*$"
+          msg: "use log/slog, not fmt.Print (backend-standards.md 12)"
+        - pattern: "^log\\.(Print|Fatal|Panic).*$"
+          msg: "use log/slog, not the log package (backend-standards.md 12)"
+    gosec:
+      excludes:
+        # G104 duplicates errcheck.
+        - G104
+
+  exclusions:
+    rules:
+      - path: "cmd/"
+        linters: [forbidigo]
+      - path: "_test\\.go$"
+        linters: [gosec, errcheck, noctx]
+      # Generated code is not ours to lint.
+      - path: "openapi/gen/"
+        linters: [staticcheck, errcheck, govet, unconvert, misspell, gosec]
+      - path: "internal/store/gen/"
+        linters: [staticcheck, errcheck, govet, unconvert, misspell, gosec]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/hyscaler/qavia/api
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

@@ -1,0 +1,42 @@
+# Environment
+.env
+.env.local
+*.local
+
+# Go
+/api/bin/
+/api/tmp/
+/api/var/
+/api/api
+/api/worker
+/api/adminreset
+/api/browsecheck
+*.test
+*.out
+coverage.txt
+
+# Node
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local data
+/infra/docker/data/
+/var/
+/storage/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+.DS_Store

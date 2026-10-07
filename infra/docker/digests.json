@@ -1,0 +1,35 @@
+{
+  "images": {
+    "k6": {
+      "digest": "sha256:40c64b5c88950531a658af76d649a8811a77e446c58acb85ed037fef450bce66",
+      "reference": "ghcr.io/hyscaler/qavia-runner-k6:build"
+    },
+    "mock-server": {
+      "digest": "sha256:90014b83f6009983cdd9cf8ecf1f3e4f4a08fb5353da3dda28f70923e57ca50a",
+      "reference": "ghcr.io/hyscaler/qavia-mock-server:build"
+    },
+    "net-helper": {
+      "digest": "sha256:81a182877b2030deed5aec6bff7cfb61527a03f99bf5168fce8f32a75fdebeee",
+      "reference": "ghcr.io/hyscaler/qavia-net-helper:build"
+    },
+    "node": {
+      "digest": "sha256:f1889a4059a2cb222d985ffcec87f35dcf5a890993da42f04d17a603ac1df103",
+      "reference": "ghcr.io/hyscaler/qavia-runner-node:build"
+    },
+    "playwright": {
+      "digest": "sha256:f2661704b47c59e31c0e46061692ff9bad6c42ab2e9eae42401addeb1d573db5",
+      "reference": "ghcr.io/hyscaler/qavia-runner-playwright:build"
+    },
+    "python": {
+      "digest": "sha256:c895f149651fb1fb83d225224a224ca31ad2146f76a82c91919f34469fa7729d",
+      "reference": "ghcr.io/hyscaler/qavia-runner-python:build"
+    },
+    "security-runner": {
+      "digest": "sha256:0c308168a578629247eacb871876836d245b7b38ae1b2d5426d09448046a88fa",
+      "reference": "ghcr.io/hyscaler/qavia-runner-security:build"
+    }
+  },
+  "platform": "linux/amd64",
+  "pushed": false,
+  "registry": "ghcr.io/hyscaler"
+}

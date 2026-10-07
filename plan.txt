@@ -1,0 +1,467 @@
+I agree. Don't try to build the entire SDLC platform first. Build one product that solves one problem exceptionally well, then expand.
+
+## Product Name (Working)
+
+* TestPilot AI
+* AutoQA AI
+* TestForge AI
+* TestMind AI
+* QA Copilot
+* VeriFlow AI
+
+I like **TestPilot AI** because it's memorable and clearly communicates its purpose.
+
+---
+
+# Vision
+
+> Upload a requirement, API specification, or code repository, and AI automatically generates, executes, and maintains all the tests.
+
+Instead of replacing QA engineers, it acts as an AI QA Engineer.
+
+---
+
+# Version 1 (MVP)
+
+### Input
+
+The user can provide any of these:
+
+* Requirement (text)
+* PDF
+* Word document
+* Swagger/OpenAPI
+* Postman Collection
+* GitHub Repository
+* Existing source code
+* Database schema
+
+---
+
+### AI Understands
+
+It extracts:
+
+* Features
+* Business rules
+* User flows
+* Validation rules
+* APIs
+* Authentication
+* Edge cases
+
+Example
+
+```text
+User can login using email and password.
+
+Password must contain at least 8 characters.
+
+Account locks after 5 failed attempts.
+```
+
+AI understands
+
+```text
+Feature
+
+Login
+
+Validation
+
+Password length
+
+Security
+
+Account Lock
+
+Authentication
+
+JWT
+
+Negative Cases
+
+Wrong Password
+
+Empty Email
+
+Invalid Email
+
+Rate Limit
+```
+
+---
+
+# AI Generates
+
+## 1. Test Cases
+
+```text
+Login with valid credentials
+
+Login with wrong password
+
+Login without password
+
+Login with empty email
+
+SQL Injection
+
+XSS
+
+Rate Limiting
+
+Locked Account
+
+Expired Password
+
+Inactive User
+```
+
+---
+
+## 2. API Tests
+
+Generate automatically for
+
+```
+POST /login
+
+POST /signup
+
+POST /forgot-password
+```
+
+Output
+
+* Postman Collection
+* Bruno Collection
+* REST Assured
+* Supertest
+
+---
+
+## 3. Unit Tests
+
+Generate
+
+* Jest
+* Vitest
+* JUnit
+* NUnit
+* pytest
+
+Depending on the project.
+
+---
+
+## 4. UI Tests
+
+Generate
+
+* Playwright
+* Cypress
+* Selenium
+
+Automatically.
+
+---
+
+## 5. Performance Tests
+
+Generate
+
+* k6
+* JMeter
+* Artillery
+
+---
+
+## 6. Security Tests
+
+Generate
+
+* SQL Injection
+* XSS
+* CSRF
+* JWT
+* Broken Authentication
+* IDOR
+* Rate Limit
+
+---
+
+## 7. Test Data
+
+Generate
+
+```
+100 Random Users
+
+Random Email
+
+Random Phone
+
+Random Address
+
+Fake Credit Card
+
+Large Dataset
+```
+
+---
+
+## 8. Mock Server
+
+Automatically create
+
+```
+Fake APIs
+
+Delay
+
+500 Errors
+
+Timeouts
+
+Random Failures
+```
+
+---
+
+# AI Executes Tests
+
+The platform should execute
+
+```
+Playwright
+
+Jest
+
+Vitest
+
+Cypress
+
+Supertest
+
+Postman
+
+k6
+```
+
+inside Docker containers.
+
+---
+
+# AI Analyzes Failures
+
+Instead of showing
+
+```
+Test Failed
+```
+
+it explains
+
+```
+Reason
+
+Backend returned 500.
+
+Root Cause
+
+Null pointer in LoginService.
+
+Possible Fix
+
+Check password hashing before JWT creation.
+
+Related Commit
+
+8f9ac21
+
+Confidence
+
+92%
+```
+
+---
+
+# Dashboard
+
+```
++---------------------------------------------------------+
+|                 TESTPILOT AI                            |
++---------------------------------------------------------+
+| Project                          QuickDesk              |
+| Branch                           development            |
+| Last Scan                        5 mins ago             |
++---------------------------------------------------------+
+
+Requirements        18
+Generated Tests     432
+Passed              398
+Failed              34
+Coverage            91%
+
+-----------------------------------------
+
+Recent Failures
+
+Login API
+
+Payment API
+
+Dashboard
+
+Profile Update
+
+-----------------------------------------
+
+Generate Tests
+
+Run Tests
+
+View Reports
+
+Export
+```
+
+---
+
+# AI Agents
+
+Instead of one AI model, use specialized agents.
+
+## Requirement Agent
+
+Reads business requirements.
+
+Output
+
+* Features
+* Acceptance Criteria
+* Business Rules
+
+---
+
+## Test Design Agent
+
+Creates
+
+* Functional tests
+* Edge cases
+* Negative scenarios
+
+---
+
+## Code Agent
+
+Reads
+
+* APIs
+* Controllers
+* Services
+* Database
+
+Detects uncovered code paths.
+
+---
+
+## UI Agent
+
+Reads
+
+* React
+* Angular
+* Vue
+* HTML
+
+Finds buttons, forms, workflows, and generates Playwright or Cypress tests.
+
+---
+
+## API Agent
+
+Reads
+
+* Swagger
+* OpenAPI
+* Postman
+
+Creates API tests.
+
+---
+
+## Execution Agent
+
+Runs all tests.
+
+Collects
+
+* Logs
+* Screenshots
+* Videos
+* Reports
+
+---
+
+## Analysis Agent
+
+Analyzes failures.
+
+Finds
+
+* Root cause
+* Related commits
+* Suggested fixes
+
+---
+
+# Technology Stack
+
+### Frontend
+
+* Next.js
+* React
+* Tailwind CSS
+* shadcn/ui
+* React Flow (workflow visualization)
+
+### Backend
+
+* NestJS (API and orchestration)
+* Python (FastAPI) for AI-heavy services
+
+### AI
+
+* LangGraph for agent orchestration
+* Claude, GPT-5, or Gemini for reasoning
+* Local models (Qwen/Llama) for on-premise deployments
+
+### Storage
+
+* PostgreSQL
+* pgvector
+* Redis
+* MinIO/S3 for reports and artifacts
+
+### Execution
+
+* Docker
+* Playwright
+* Cypress
+* Jest
+* Vitest
+* Supertest
+* k6
+
+### Integrations
+
+* GitHub
+* GitLab
+* Jira
+* Jenkins
+* GitHub Actions
+* Azure DevOps
+
