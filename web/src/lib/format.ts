@@ -28,6 +28,17 @@ export function formatDateTime(value: string | number | Date, ctx: FormatContext
   }).format(toDate(value));
 }
 
+/** "14:05:09", for log lines. */
+export function formatTime(value: string | number | Date, ctx: FormatContext = {}): string {
+  return new Intl.DateTimeFormat(ctx.locale ?? "en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+    timeZone: zone(ctx),
+  }).format(toDate(value));
+}
+
 export function formatDate(value: string | number | Date, ctx: FormatContext = {}): string {
   return new Intl.DateTimeFormat(ctx.locale ?? "en-GB", {
     dateStyle: "medium",

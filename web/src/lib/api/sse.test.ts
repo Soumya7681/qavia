@@ -120,6 +120,29 @@ describe("openEventStream", () => {
     stream.close();
   });
 
+  it("reconnects when a connection goes silent, even with no error", async () => {
+    let call = 0;
+    const fetch = vi.fn(async () => {
+      call += 1;
+      // The first connection delivers one line and then says nothing, ever.
+      return call === 1
+        ? streamResponse(["id: 1\nevent: event\ndata: first\n\n"], { hold: true })
+        : streamResponse(["id: 2\nevent: event\ndata: second\n\n"], { hold: true });
+    });
+    const messages: string[] = [];
+    const states: StreamState[] = [];
+    const stream = openEventStream("http://api.test/s", {
+      fetch,
+      baseDelayMs: 1,
+      idleTimeoutMs: 50,
+      onMessage: (m) => void messages.push(m.data),
+      onState: (s) => void states.push(s),
+    });
+    await waitFor(() => messages.length === 2);
+    expect(states).toContain("reconnecting");
+    stream.close();
+  });
+
   it("aborts the request when closed", async () => {
     let signal: AbortSignal | undefined;
     const fetch = vi.fn(async (_u: RequestInfo | URL, init?: RequestInit) => {

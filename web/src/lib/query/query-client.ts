@@ -45,7 +45,14 @@ export function routeAccessError(error: unknown, handlers: AccessHandlers): bool
 
 export function makeQueryClient(handlers: AccessHandlers): QueryClient {
   return new QueryClient({
-    queryCache: new QueryCache({ onError: (error) => routeAccessError(error, handlers) }),
+    queryCache: new QueryCache({
+      onError: (error, query) => {
+        // A background lookup (a breadcrumb label, say) marks itself quiet: its
+        // failure is not the page's failure and must not navigate away.
+        if (query.meta?.quiet) return;
+        routeAccessError(error, handlers);
+      },
+    }),
     // A failed mutation still sends a signed-out user to login. A forbidden one is
     // left to the form that submitted it, which can say what was refused.
     mutationCache: new MutationCache({

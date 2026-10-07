@@ -20,6 +20,7 @@ export function useFormat() {
       timeZone,
       dateTime: (v: string | number | Date) => format.formatDateTime(v, ctx),
       date: (v: string | number | Date) => format.formatDate(v, ctx),
+      time: (v: string | number | Date) => format.formatTime(v, ctx),
       relative: (v: string | number | Date) => format.formatRelative(v, ctx),
       duration: format.formatDuration,
       number: (v: number) => format.formatNumber(v, ctx),

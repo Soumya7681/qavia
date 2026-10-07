@@ -20,7 +20,16 @@ export type StreamOptions = {
   fetch?: typeof globalThis.fetch;
   baseDelayMs?: number;
   maxDelayMs?: number;
+  /**
+   * Silence longer than this, with not even a heartbeat comment, means the
+   * connection is dead even though nothing said so: a proxy can hold the browser's
+   * side open after the server behind it has gone. The API sends a heartbeat every
+   * 15 seconds, so the default allows two to go missing.
+   */
+  idleTimeoutMs?: number;
 };
+
+export const DEFAULT_IDLE_TIMEOUT_MS = 35_000;
 
 /** 0.5s, 1s, 2s, 4s ... capped, with jitter so a fleet of tabs does not reconnect in step. */
 export function backoffDelay(attempt: number, base = 500, max = 15_000, random = Math.random) {
@@ -74,6 +83,25 @@ export function openEventStream(url: string, options: StreamOptions): { close: (
     let attempt = 0;
     while (!stopped) {
       setState(attempt === 0 ? "connecting" : "reconnecting");
+      // One controller per attempt, so the watchdog can end this connection
+      // without ending the stream.
+      const attemptController = new AbortController();
+      const onClose = () => attemptController.abort();
+      controller.signal.addEventListener("abort", onClose, { once: true });
+      let watchdog: ReturnType<typeof setTimeout> | undefined;
+      let reader:
+        ReadableStreamDefaultReader<{ id?: string; event?: string; data: string }> | undefined;
+      let silent = false;
+      const feed = () => {
+        clearTimeout(watchdog);
+        watchdog = setTimeout(() => {
+          silent = true;
+          attemptController.abort();
+          // Not every body honours the abort signal; cancelling the reader ends the
+          // read either way.
+          void reader?.cancel().catch(() => {});
+        }, options.idleTimeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS);
+      };
       try {
         const headers: Record<string, string> = {
           Accept: "text/event-stream",
@@ -86,7 +114,7 @@ export function openEventStream(url: string, options: StreamOptions): { close: (
           headers,
           credentials: "same-origin",
           cache: "no-store",
-          signal: controller.signal,
+          signal: attemptController.signal,
         });
 
         if (!response.ok) {
@@ -104,8 +132,19 @@ export function openEventStream(url: string, options: StreamOptions): { close: (
 
         attempt = 0;
         setState("open");
+        feed();
 
-        const reader = response.body
+        reader = response.body
+          .pipeThrough(
+            // Every byte counts as a sign of life, heartbeat comments included,
+            // which the parser below would otherwise swallow unseen.
+            new TransformStream<Uint8Array, AllowSharedBufferSource>({
+              transform(chunk, out) {
+                feed();
+                out.enqueue(chunk);
+              },
+            }),
+          )
           .pipeThrough(new TextDecoderStream())
           .pipeThrough(new EventSourceParserStream())
           .getReader();
@@ -124,6 +163,7 @@ export function openEventStream(url: string, options: StreamOptions): { close: (
           }
         }
 
+        if (silent) throw new Error("event stream went silent");
         if (stopped) return;
         const again = options.onEnd ? await options.onEnd() : true;
         if (!again) {
@@ -132,6 +172,9 @@ export function openEventStream(url: string, options: StreamOptions): { close: (
         }
       } catch {
         if (stopped || controller.signal.aborted) return;
+      } finally {
+        clearTimeout(watchdog);
+        controller.signal.removeEventListener("abort", onClose);
       }
 
       attempt += 1;

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { formatBytes, formatDateTime, formatDuration, formatRelative, formatUSD } from "./format";
+import {
+  formatBytes,
+  formatDateTime,
+  formatDuration,
+  formatRelative,
+  formatTime,
+  formatUSD,
+} from "./format";
 
 describe("format", () => {
   const instant = "2026-10-07T08:30:00Z";
@@ -8,6 +15,10 @@ describe("format", () => {
   it("shows a timestamp in the user's zone, not the machine's", () => {
     expect(formatDateTime(instant, { timeZone: "Asia/Kolkata" })).toBe("7 Oct 2026, 14:00");
     expect(formatDateTime(instant, { timeZone: "America/New_York" })).toBe("7 Oct 2026, 04:30");
+  });
+
+  it("formats a log line's time in the user's zone", () => {
+    expect(formatTime(instant, { timeZone: "Asia/Kolkata" })).toBe("14:00:00");
   });
 
   it("survives an unknown zone name", () => {
