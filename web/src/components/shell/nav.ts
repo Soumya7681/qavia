@@ -1,4 +1,4 @@
-import { FolderKanbanIcon, type LucideIcon } from "lucide-react";
+import { FolderKanbanIcon, type LucideIcon, SettingsIcon } from "lucide-react";
 
 import type { Role } from "@/lib/auth/roles";
 
@@ -11,6 +11,7 @@ export type NavItem = { href: string; label: string; icon: LucideIcon; min?: Rol
  */
 export const workspaceNav: NavItem[] = [
   { href: "/projects", label: "Projects", icon: FolderKanbanIcon },
+  { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export const adminNav: NavItem[] = [];
