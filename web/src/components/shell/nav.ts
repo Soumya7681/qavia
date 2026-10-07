@@ -1,4 +1,4 @@
-import { FolderKanbanIcon, type LucideIcon, SettingsIcon } from "lucide-react";
+import { FolderKanbanIcon, type LucideIcon, SettingsIcon, UsersIcon } from "lucide-react";
 
 import type { Role } from "@/lib/auth/roles";
 
@@ -14,7 +14,9 @@ export const workspaceNav: NavItem[] = [
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
-export const adminNav: NavItem[] = [];
+export const adminNav: NavItem[] = [
+  { href: "/admin/users", label: "Users", icon: UsersIcon, min: "admin" },
+];
 
 /** Labels for path segments, for breadcrumbs. Anything not here is title-cased. */
 export const segmentLabels: Record<string, string> = {
