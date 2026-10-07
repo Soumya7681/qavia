@@ -1,0 +1,211 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Qavia design tokens (FE-S.2).
+ *
+ * The palette extends the one already in docs/presentation.html: a deep green for
+ * the one primary action, near-black green ink, and a rust reserved for risk and
+ * failure. Separation is border-led; shadows are kept for things that float
+ * (popover, dialog). Every text/fill pair below was checked at definition time:
+ * body text is 5:1 or better on every surface it sits on, input borders 3:1.
+ *
+ * State colours are for state only. `success` is a pass, never decoration, and is
+ * tuned away from `primary` so a green button and a passed test do not read as the
+ * same thing.
+ */
+:root {
+  color-scheme: light;
+
+  --background: #f6f8f7;
+  --foreground: #131e1a;
+  --card: #ffffff;
+  --card-foreground: #131e1a;
+  --popover: #ffffff;
+  --popover-foreground: #131e1a;
+
+  --primary: #0e6b52;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2f0;
+  --secondary-foreground: #2e3f38;
+  --muted: #eef2f0;
+  --muted-foreground: #5b6b64;
+  --accent: #e6f0ea;
+  --accent-foreground: #084a38;
+
+  --border: #dbe2de;
+  --input: #829089;
+  --ring: #0e6b52;
+
+  --destructive: #a8431a;
+  --destructive-wash: #fbede6;
+  --success: #1a6b3c;
+  --success-wash: #e3f1e7;
+  --warning: #80520a;
+  --warning-wash: #fbf1dc;
+  --info: #2d5b8a;
+  --info-wash: #e7eef6;
+
+  --chart-1: #0e6b52;
+  --chart-2: #2d5b8a;
+  --chart-3: #80520a;
+  --chart-4: #a8431a;
+  --chart-5: #5b6b64;
+
+  --sidebar: #eef2f0;
+  --sidebar-foreground: #131e1a;
+  --sidebar-primary: #0e6b52;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e6f0ea;
+  --sidebar-accent-foreground: #084a38;
+  --sidebar-border: #dbe2de;
+  --sidebar-ring: #0e6b52;
+
+  /* Subtle, not rounded: this is a dense working tool, and large radii waste the
+     corners of every table cell and input. Pills are kept for status chips only. */
+  --radius: 0.375rem;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Depth in dark mode comes from surface lightness, not shadow. */
+  --background: #0f1513;
+  --foreground: #e4ebe8;
+  --card: #161e1b;
+  --card-foreground: #e4ebe8;
+  --popover: #1c2622;
+  --popover-foreground: #e4ebe8;
+
+  --primary: #4db592;
+  --primary-foreground: #07130f;
+  --secondary: #1c2622;
+  --secondary-foreground: #d3ddd8;
+  --muted: #1c2622;
+  --muted-foreground: #94a59d;
+  --accent: #16302a;
+  --accent-foreground: #a9dcc7;
+
+  --border: #26322d;
+  --input: #617169;
+  --ring: #4db592;
+
+  --destructive: #ee8d66;
+  --destructive-wash: #2e1a12;
+  --success: #6ccb95;
+  --success-wash: #12261b;
+  --warning: #e6b860;
+  --warning-wash: #2b2212;
+  --info: #8db4de;
+  --info-wash: #13202f;
+
+  --chart-1: #4db592;
+  --chart-2: #8db4de;
+  --chart-3: #e6b860;
+  --chart-4: #ee8d66;
+  --chart-5: #94a59d;
+
+  --sidebar: #131a17;
+  --sidebar-foreground: #e4ebe8;
+  --sidebar-primary: #4db592;
+  --sidebar-primary-foreground: #07130f;
+  --sidebar-accent: #16302a;
+  --sidebar-accent-foreground: #a9dcc7;
+  --sidebar-border: #26322d;
+  --sidebar-ring: #4db592;
+}
+
+@theme inline {
+  /* System faces: native rendering, no font download, and nothing to flash in.
+     Mono carries identifiers, logs, and code, which this product shows a lot of. */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-wash: var(--destructive-wash);
+  --color-success: var(--success);
+  --color-success-wash: var(--success-wash);
+  --color-warning: var(--warning);
+  --color-warning-wash: var(--warning-wash);
+  --color-info: var(--info);
+  --color-info-wash: var(--info-wash);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Motion: fast for hover and toggles, base for menus and tabs, slow for dialogs
+     and sheets. Nothing animates on page load. */
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  /* Figures in tables, durations, and counts line up. */
+  table,
+  time,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -51,6 +51,17 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: api/go.sum
       - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      # `make gen` includes the web client, so the stale check covers it too.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
       - run: make tools
       - name: go mod tidy is clean
         run: |
@@ -150,29 +161,24 @@ jobs:
 
   test-web:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - id: scaffolded
-        run: |
-          if [ -f web/next.config.ts ] || [ -f web/next.config.js ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "web is not scaffolded yet (FE-S.1); skipping"
-          fi
       - uses: pnpm/action-setup@v4
-        if: steps.scaffolded.outputs.ready == 'true'
         with:
           version: 10
       - uses: actions/setup-node@v4
-        if: steps.scaffolded.outputs.ready == 'true'
         with:
           node-version-file: .nvmrc
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
-      - if: steps.scaffolded.outputs.ready == 'true'
-        working-directory: web
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
-          pnpm test --run
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test --run
+      # The build is the check that the rewrite config, route groups, and server
+      # components hold together, which neither lint nor tsc can see.
+      - run: pnpm build

@@ -3,11 +3,48 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "comment": "Placeholder. The app is scaffolded in FE-S.1, which is blocked until the contract freeze (BE-X.1). Only the client-generation path exists now, so BE-0.8 can prove the spec generates a usable TypeScript client.",
   "scripts": {
-    "gen": "openapi-typescript ../api/openapi/qavia.yaml -o src/lib/api/schema.d.ts"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "gen": "openapi-typescript ../api/openapi/qavia.yaml -o src/lib/api/schema.d.ts",
+    "test": "vitest",
+    "dev:mock": "NEXT_PUBLIC_API_BASE_URL=http://localhost:4010 next dev"
   },
   "devDependencies": {
-    "openapi-typescript": "^7.9.1"
-  }
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.0",
+    "eslint-config-prettier": "^10",
+    "openapi-typescript": "^7.9.1",
+    "prettier": "^3",
+    "shadcn": "^4.21.3",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.104.1",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.4.0",
+    "lucide-react": "^1.52.0",
+    "next": "16.4.0",
+    "next-themes": "^0.4.6",
+    "openapi-fetch": "^0.17.0",
+    "openapi-react-query": "^0.5.4",
+    "radix-ui": "^1.7.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "sonner": "^2.0.8",
+    "tw-animate-css": "^1.4.0"
+  },
+  "packageManager": "pnpm@10.33.0"
 }

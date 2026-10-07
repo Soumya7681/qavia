@@ -59,7 +59,7 @@ tools: ## Install the pinned code generators
 	cd $(API_DIR) && go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.7.1
 
 .PHONY: gen
-gen: gen-sql gen-ai-schema gen-api ## Regenerate everything. CI fails on a diff
+gen: gen-sql gen-ai-schema gen-api gen-web ## Regenerate everything. CI fails on a diff
 
 .PHONY: gen-sql
 gen-sql: ## Regenerate sqlc query code
@@ -73,10 +73,8 @@ gen-ai-schema: ## Dump the FastAPI schema the Go AI client is generated from
 gen-api: ## Regenerate the Go server and the AI service client
 	cd $(API_DIR) && go generate ./openapi/...
 
-# Joins `gen` at FE-S.3, when CI gains a Node job that can enforce a clean diff on
-# the generated client. Until then it is run on demand to prove the spec generates.
 .PHONY: gen-web
-gen-web: ## Regenerate the TypeScript client from the same spec
+gen-web: ## Regenerate the TypeScript client from the same spec (FE-S.3)
 	cd $(WEB_DIR) && pnpm run gen
 
 # ---------------------------------------------------------------- migrations
@@ -137,7 +135,7 @@ test-python: ## Python agent tests against recorded fixtures
 
 .PHONY: test-web
 test-web: ## Frontend component tests
-	@[ -f $(WEB_DIR)/package.json ] && cd $(WEB_DIR) && pnpm test --run || echo "web: not scaffolded yet (FE-S.1)"
+	cd $(WEB_DIR) && pnpm test --run
 
 # ----------------------------------------------------------------------- lint
 
@@ -154,8 +152,8 @@ lint-python:
 	cd $(AI_DIR) && uv run ruff check .
 
 .PHONY: lint-web
-lint-web:
-	@[ -f $(WEB_DIR)/package.json ] && cd $(WEB_DIR) && pnpm lint || echo "web: not scaffolded yet (FE-S.1)"
+lint-web: ## ESLint, Prettier, and the TypeScript check on web/
+	cd $(WEB_DIR) && pnpm lint && pnpm format:check && pnpm typecheck
 
 .PHONY: tidy
 tidy: ## go mod tidy. CI fails on a diff
@@ -166,6 +164,10 @@ tidy: ## go mod tidy. CI fails on a diff
 .PHONY: seed
 seed: ## Seed the demo project (BE-X.2)
 	cd $(API_DIR) && go run ./cmd/seed
+
+.PHONY: web-mock
+web-mock: ## Run the web app against `make mock` (start that first)
+	cd $(WEB_DIR) && pnpm dev:mock
 
 .PHONY: mock
 mock: ## Serve the OpenAPI contract as a mock API (BE-X.3)

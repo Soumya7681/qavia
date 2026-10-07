@@ -289,6 +289,2456 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings/registry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every setting's declaration
+         * @description The single source of truth for the settings UI. Each entry carries its type,
+         *     default, validation as JSON Schema, the scopes it may be written at, its
+         *     minimum role, and whether changing it needs a restart.
+         *
+         *     A client renders forms from this and converts each schema to its own
+         *     validator at runtime, so client-side and server-side validation come from
+         *     one declaration. Adding a setting on the server therefore needs no frontend
+         *     change at all.
+         *
+         *     Entries above the caller's role are omitted, and the server enforces the
+         *     same rule on write.
+         */
+        get: operations["getSettingsRegistry"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resolved setting values
+         * @description Values resolved user, then project, then global, then the declared default.
+         *
+         *     Each value reports which scope it came from, so the UI can show that a value
+         *     is inherited and offer to reset an override. A secret reports only
+         *     `{isSet, updatedAt, hint}`; the stored value is never returned.
+         */
+        get: operations["getSettings"];
+        /**
+         * Write one or more settings
+         * @description Each change is validated against its registry entry, checked against the
+         *     caller's role and the scopes the setting allows, and written with an audit
+         *     row in the same transaction.
+         *
+         *     Writes are all-or-nothing per request: one invalid value rejects the whole
+         *     request rather than leaving half the form applied.
+         */
+        put: operations["updateSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an override
+         * @description Deletes the stored value at one scope so the setting falls through to the
+         *     next: user to project, project to global, global to the declared default.
+         */
+        delete: operations["clearSetting"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What first-run setup still needs
+         * @description Public, because it is read before an account exists. It reports what is
+         *     missing rather than a single boolean, so the wizard can show the remaining
+         *     steps: no admin, storage unreachable, no AI provider.
+         *
+         *     Only the admin and reachable storage block completion. A missing AI
+         *     provider is reported as required before AI jobs can run, which is enforced
+         *     at enqueue time rather than by refusing setup.
+         */
+        get: operations["getSetupStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create the first admin
+         * @description Available only while zero users exist, and permanently 404 afterwards, so
+         *     it cannot become a back door once the platform is in use. Rate limited by
+         *     address.
+         *
+         *     This is what makes the six bootstrap variables enough to reach a working
+         *     logged-in admin with no seed script and no manual SQL.
+         */
+        post: operations["createFirstAdmin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List projects
+         * @description A QA Engineer sees the projects they own or are a member of. A QA Lead and
+         *     an Admin see all of them. The difference is applied server-side, because a
+         *     client-side filter is not an access control.
+         */
+        get: operations["listProjects"];
+        put?: never;
+        /**
+         * Create a project
+         * @description The creator becomes the owner, and ownership counts as membership, so
+         *     nobody has to add themselves to their own project.
+         *
+         *     Test types are chosen here and editable later. A type that is not
+         *     implemented yet is accepted and returned with `available: false` and a
+         *     reason, so the UI disables it rather than hiding it (F-3.12).
+         */
+        post: operations["createProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One project */
+        get: operations["getProject"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Rename a project or change its test types
+         * @description An archived project is read-only: this returns `project_archived` rather
+         *     than silently succeeding or failing with a 500.
+         */
+        patch: operations["updateProject"];
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive a project
+         * @description A soft delete, because history is a requirement here: runs, defects and
+         *     generated suites stay readable. Everything that mutates the project is
+         *     refused while it is archived.
+         */
+        post: operations["archiveProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/unarchive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived project */
+        post: operations["unarchiveProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/external-ai-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Approve or revoke external AI processing for a project
+         * @description The server-side gate for data residency (F-16.13). Without approval a
+         *     project may only be assigned providers marked local, and that is checked
+         *     before an AI job is enqueued rather than inside a worker.
+         *
+         *     Admin only, and audited.
+         */
+        put: operations["setExternalAIApproval"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Project members */
+        get: operations["listProjectMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/members/{userID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Add a member or change their project role
+         * @description The project role is separate from the platform role: a QA Engineer may lead
+         *     one project and only contribute to another. The narrower of the two applies.
+         */
+        put: operations["addProjectMember"];
+        post?: never;
+        /**
+         * Remove a member
+         * @description The owner cannot be removed. Transfer ownership first, otherwise a project
+         *     ends up with nobody who can administer it.
+         */
+        delete: operations["removeProjectMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a project's inputs */
+        get: operations["listArtifacts"];
+        put?: never;
+        /**
+         * Upload an input file
+         * @description Multipart, streamed to the object store: the file is never buffered whole
+         *     in memory, and the SHA-256 is computed while streaming.
+         *
+         *     Checks run in this order, before anything is written: the size cap, the
+         *     content-type allowlist matched against the sniffed type rather than the
+         *     extension, then archive-bomb rejection.
+         *
+         *     Re-uploading an identical file returns the existing artifact with
+         *     `deduplicated: true` and does not re-run generation (FR-1.4). A changed
+         *     file with the same name and kind becomes version 2, and version 1 stays,
+         *     which is what the maintenance module diffs against.
+         */
+        post: operations["uploadArtifact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/artifacts/{artifactID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One artifact */
+        get: operations["getArtifact"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete an artifact
+         * @description The stored object is removed with the row, so nothing is orphaned.
+         */
+        delete: operations["deleteArtifact"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/artifacts/{artifactID}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every version of one logical input
+         * @description Versions share a lineage. This is the history a spec change is diffed
+         *     against in phase 11.
+         */
+        get: operations["listArtifactVersions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/artifacts/{artifactID}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the stored file
+         * @description Streamed from the object store. A driver that can sign URLs redirects
+         *     instead, so a large download does not pass through the API process.
+         */
+        get: operations["downloadArtifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A project's jobs */
+        get: operations["listJobs"];
+        put?: never;
+        /**
+         * Submit a job chain
+         * @description Returns 202 with a job reference and never blocks: the user may close the
+         *     browser and be notified when the chain finishes (FR-1.6, NFR-1).
+         *
+         *     Everything checkable is checked here rather than inside a worker twenty
+         *     minutes later: the project is not archived, the chain exists, an AI chain
+         *     has a configured provider, and the project is approved for external AI if
+         *     the assigned provider is not local.
+         */
+        post: operations["submitJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One job, with its chain
+         * @description A chain is queryable as a unit: the parent job carries its stages, so one
+         *     request describes the whole submission rather than one stage of it.
+         */
+        get: operations["getJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobID}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a job
+         * @description Cancellation is cooperative: the handler's context is cancelled and it
+         *     stops between units of work, so nothing is killed mid-write. A job that has
+         *     already finished returns `job_not_cancelable`.
+         */
+        post: operations["cancelJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobID}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Live job status and event log
+         * @description Server-sent events. The current state is sent on connect and then deltas,
+         *     so a late joiner is never left with a blank screen.
+         *
+         *     A comment heartbeat every 15 seconds keeps proxies from closing an idle
+         *     stream. `Last-Event-ID` resumes after a reconnect from the last event the
+         *     client saw, so a dropped connection does not leave a gap in the log.
+         *
+         *     Fan-out is one database listener per process serving many browsers, never
+         *     one connection per viewer.
+         */
+        get: operations["streamJobEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The notification centre
+         * @description The in-app channel is built in, always available, and needs no
+         *     configuration, so this endpoint works on an install with no SMTP and no
+         *     Slack (FR-8.2). Every notification carries a deep link to what it is about
+         *     (FR-8.5).
+         */
+        get: operations["listNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unread badge count */
+        get: operations["getUnreadNotificationCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark everything read */
+        post: operations["markAllNotificationsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/{notificationID}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark one read */
+        post: operations["markNotificationRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The audit log
+         * @description Admin only, cursor paginated, and filterable. No row here contains a
+         *     secret: detail passes through the same redaction as the logger.
+         */
+        get: operations["listAuditEntries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hooks/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Inbound trigger webhook
+         * @description The built-in RunTrigger, so a CI system can start work with no external
+         *     platform configured and no user session.
+         *
+         *     The token identifies the project. The body is authenticated by an HMAC
+         *     signature over the raw bytes in `X-Qavia-Signature`, and a replayed
+         *     signature is refused, so a captured request cannot be resent. A bad
+         *     signature is audited.
+         */
+        post: operations["triggerWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Configured AI providers
+         * @description Credentials read back as `{isSet, updatedAt, hint}` and never as a value:
+         *     a stored secret is replaced, not edited (F-1.8).
+         */
+        get: operations["listAIProviders"];
+        put?: never;
+        /**
+         * Add a provider
+         * @description One adapter kind, `openai-compatible`, reaches Ollama, vLLM, LiteLLM,
+         *     OpenRouter, Together, Groq, Fireworks and DeepSeek: a base URL, an optional
+         *     key, and a model name, with no code change and no deploy.
+         *
+         *     `dataResidency` is the server-side half of the NDA problem. A project
+         *     without external AI approval may only be assigned a provider marked
+         *     `local`, and that is enforced before any job is enqueued.
+         */
+        post: operations["createAIProvider"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/providers/{providerID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One provider */
+        get: operations["getAIProvider"];
+        /**
+         * Update a provider
+         * @description Omitting `credentials` leaves the stored ones alone. A form that submitted
+         *     an empty secret field and blanked the key would be a support call, so the
+         *     absence means "unchanged" rather than "clear".
+         */
+        put: operations["updateAIProvider"];
+        post?: never;
+        /**
+         * Remove a provider
+         * @description Refused while a tier assignment references it, naming how many are in the
+         *     way. A delete that silently unassigned the reasoning tier would surface a
+         *     week later as "why is every job failing".
+         */
+        delete: operations["deleteAIProvider"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/providers/{providerID}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Probe what a model can actually do
+         * @description Runs four small calls confirming chat, tool use, structured output, and
+         *     vision, then writes back what worked. Detected capability overwrites
+         *     declared capability, because the shipped defaults are a guess and this is a
+         *     measurement (F-16.5).
+         *
+         *     An unusable model reports why, so the UI can disable it with a reason
+         *     rather than hiding it.
+         */
+        post: operations["testAIProvider"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Configured models */
+        get: operations["listAIModels"];
+        put?: never;
+        /**
+         * Add a model to a provider
+         * @description Prices are per million tokens and live here rather than in code, because
+         *     provider pricing changes and a deploy is the wrong way to track it.
+         *
+         *     Capabilities may be omitted: they are seeded from a shipped defaults table
+         *     for the provider kind and corrected by the Test connection probe.
+         */
+        post: operations["createAIModel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/models/{modelID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a model */
+        put: operations["updateAIModel"];
+        post?: never;
+        /** Remove a model */
+        delete: operations["deleteAIModel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/tiers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tier assignments
+         * @description An agent asks for a tier, never a model. Resolution is the project
+         *     assignment, then the global one, then an error that names the fix: never a
+         *     silent code default.
+         */
+        get: operations["listAITiers"];
+        /**
+         * Point a tier at a model
+         * @description The model must declare the tier and have the capabilities it needs. A
+         *     vision tier assigned a model that cannot read images is refused here rather
+         *     than failing inside a job.
+         */
+        put: operations["assignAITier"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/tiers/{assignmentID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an assignment
+         * @description A project assignment removed falls back to the global one. A global
+         *     assignment removed leaves the tier unassigned, and jobs needing it are
+         *     refused at enqueue with a message naming the tier.
+         */
+        delete: operations["unassignAITier"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The spend ceiling and what it has used
+         * @description The ceiling is checked before a call and again at enqueue, so a job is
+         *     refused when a user presses submit rather than failing halfway through.
+         */
+        get: operations["getAIBudget"];
+        /**
+         * Change the ceiling
+         * @description Writes the same settings the resolver reads, so this endpoint and the
+         *     settings screen cannot disagree. Zero means no ceiling.
+         */
+        put: operations["updateAIBudget"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/spend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What AI has cost
+         * @description Genuine SQL aggregates over `llm_calls`, grouped by provider, project, and
+         *     agent. The numbers reconcile exactly against a direct sum, because they are
+         *     one.
+         */
+        get: operations["getAISpend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/requirements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the platform understood from the input
+         * @description Every requirement carries the source reference it came from, so a reviewer
+         *     can check it against the file rather than take it on trust (F-4.2).
+         */
+        get: operations["listRequirements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/endpoints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The parsed endpoint model
+         * @description Produced by deterministic parsing, never by a model. It is what the agents
+         *     read, so seeing it is how a user checks that their specification was
+         *     understood before paying for generation.
+         */
+        get: operations["listEndpoints"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/coverage/requirements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Which requirements have test cases
+         * @description Requirement coverage, which is not code coverage and is never merged with
+         *     it (FR-7.2). The uncovered requirements are listed rather than counted:
+         *     "18 of 40" says there is a problem, and the list says where.
+         */
+        get: operations["getRequirementCoverage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * What the next generation run will cost
+         * @description Computed with the assigned provider's actual caching behaviour. The same
+         *     specification can differ by roughly an order of magnitude between a
+         *     provider with explicit caching and one with none, so a provider-agnostic
+         *     number would be misleading.
+         *
+         *     It is an estimate, and the assumptions are returned with it so it can be
+         *     audited rather than believed.
+         */
+        post: operations["estimateGeneration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/test-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Generated and hand-written test cases
+         * @description Filterable by requirement, category, priority, and status, cursor
+         *     paginated, with a hard maximum page size. Cases merged into another are
+         *     excluded: a duplicate is history rather than a row to filter out.
+         */
+        get: operations["listTestCases"];
+        put?: never;
+        /**
+         * Add a test case by hand
+         * @description A hand-written case is approved on creation: somebody wrote it
+         *     deliberately, and asking them to approve their own typing is ceremony. It
+         *     is fingerprinted like a generated one, so it collides with a duplicate
+         *     rather than sitting beside it.
+         */
+        post: operations["createTestCase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/test-cases/bulk-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve or reject in bulk
+         * @description One transaction, and a capped batch: a bulk approve over 50,000 rows would
+         *     hold a transaction open while a browser decides whether to finish the
+         *     request.
+         */
+        post: operations["setTestCaseStatuses"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-cases/{testCaseID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One test case */
+        get: operations["getTestCase"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a test case
+         * @description Rejecting is usually what somebody wants: a rejected case stays visible and
+         *     is not reproduced by the next run. Delete is for a case added by mistake.
+         */
+        delete: operations["deleteTestCase"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit a test case
+         * @description Omitted fields are left alone. A case that was merged into another is
+         *     read-only: editing the losing half of a merge would make the history lie.
+         */
+        patch: operations["updateTestCase"];
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/test-files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The generated suite
+         * @description The tree, without file content: a 300-file suite is not something to load
+         *     whole to draw a sidebar. Paged by path, so the order a browser shows and the
+         *     order it pages in are the same one.
+         */
+        get: operations["listTestFiles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/test-files/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the whole suite as a zip
+         * @description Streamed rather than built in memory, and deterministic: the same suite
+         *     exports to the same bytes, so one export diffs against the last.
+         *
+         *     The archive carries a scaffold and a README, so `npm install && npm test`
+         *     works with only environment variables supplied. Nothing in it is
+         *     hardcoded.
+         */
+        get: operations["exportTestFiles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/test-files/postman": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Build a Postman collection from approved cases
+         * @description Deterministic code rather than an agent: a collection is JSON with a known
+         *     shape, and the approved cases already say what to call and what to assert.
+         *
+         *     Base URL and auth are collection variables, not literals, so one export
+         *     runs against any environment.
+         */
+        post: operations["exportPostmanCollection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-files/{testFileID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One file, with its content
+         * @description Content is plain text. Highlighting is a frontend concern, and returning
+         *     pre-rendered HTML would make the API responsible for a rendering decision
+         *     it cannot see.
+         */
+        get: operations["getTestFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-files/{testFileID}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download one file */
+        get: operations["downloadTestFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-cases/{testCaseID}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Where a test case is implemented
+         * @description The traceability question in the other direction (F-6.11): given a case,
+         *     which generated files implement it.
+         */
+        get: operations["listFilesForTestCase"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Run history
+         * @description Newest first, cursor paginated. Every run carries its own counts, so a
+         *     history page reads one table rather than aggregating results per row
+         *     (F-12.6).
+         */
+        get: operations["listRuns"];
+        put?: never;
+        /**
+         * Run the approved suite against the target
+         * @description The target host is checked against the project's allowlist here, on the
+         *     server, before anything is queued, and checked again inside the runner at
+         *     dial time. A browser-side check is not a control (F-7.7, F-7.8).
+         *
+         *     A project with no target configured is refused with
+         *     `no_target_configured`: generation works without a target, execution does
+         *     not.
+         */
+        post: operations["triggerRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/runs/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pass rate, duration, and flake count over time
+         * @description One row per finished run in the window, oldest first, so a chart plots it
+         *     without reversing anything. A flaky test counts as neither a pass nor a
+         *     failure in the rate, because that is what makes the rate honest.
+         */
+        get: operations["getRunTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The counts panel
+         * @description Every count in one query rather than one request per number, and from one
+         *     snapshot, so the figures reconcile with each other even while a run is
+         *     writing results (F-12.1).
+         */
+        get: operations["getProjectDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One run
+         * @description Carries the digest-pinned image that executed, so a result can be traced to
+         *     the exact image that produced it.
+         */
+        get: operations["getRun"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runID}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a queued or running run
+         * @description The run is marked cancelled immediately and the container is killed and
+         *     reaped by the worker holding it. Partial results are kept and labelled,
+         *     because a run that got halfway still tells you something (F-2.6).
+         */
+        post: operations["cancelRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runID}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One run's results
+         * @description Failures first, then flaky, then the rest, so a 400-test run with three
+         *     failures does not need paging to find them. Every attempt of a retried test
+         *     is its own row, which is what makes a flaky verdict inspectable (F-7.11).
+         */
+        get: operations["listRunResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runID}/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the runner executed
+         * @description Every command a run issued, with its exit code and an output excerpt, so a
+         *     run can be reconstructed after the fact (F-17.2). Redacted through the same
+         *     handler as everything else: a credential passed to a suite never reaches
+         *     this list.
+         */
+        get: operations["listRunCommands"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runID}/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Live runner output
+         * @description Server-sent events, over the same hub as job events. A viewer joining
+         *     mid-run gets the log so far and then live output (F-7.9).
+         *
+         *     A slow client is dropped with a marker rather than buffered without limit:
+         *     the run must not slow down because somebody's tab is behind. The full log
+         *     stays available from object storage once the run finishes.
+         */
+        get: operations["streamRunLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-cases/{testCaseID}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How this case has behaved across runs
+         * @description The pattern rather than the last result: a test that alternates is flaky,
+         *     and one run cannot show that.
+         */
+        get: operations["getTestCaseHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runID}/analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The explanations for a run's failures
+         * @description One analysis per failing test, newest first when a failure has been analysed
+         *     more than once. Every analysis carries structured evidence: a log line range,
+         *     a response field path, a source location. A citation that did not check out
+         *     never reached the database (F-9.2).
+         */
+        get: operations["listRunAnalyses"];
+        put?: never;
+        /**
+         * Explain this run's failures
+         * @description Queues the analysis for a finished run. Automatic analysis is on by default,
+         *     so this exists for the case where it was turned off, or where a prompt
+         *     changed and the failures are worth a second look.
+         */
+        post: operations["analyseRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/run-results/{resultID}/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Why this test failed
+         * @description The newest analysis for one failure. A 404 means nobody has explained it yet,
+         *     which is a normal state rather than an error.
+         *
+         *     The stability score is null when the platform has no repeat history to
+         *     measure. Null means "not measurable", never zero: it is computed from the
+         *     test's own behaviour across attempts and recent runs, and one observation is
+         *     not a measurement (F-9.4).
+         */
+        get: operations["getResultAnalysis"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/run-results/{resultID}/promote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * File a defect from an analysed failure
+         * @description One call turns a failure into a defect: title and description from the
+         *     analysis, and the run result, test case, requirement, and analysis linked
+         *     rather than copied (F-9.8).
+         *
+         *     Idempotent. Promoting the same failure twice returns the defect that already
+         *     exists with `200` instead of filing a second one.
+         *
+         *     When an open defect already exists for the same test case with the same
+         *     normalised root cause, the new defect is created and linked to it as a
+         *     duplicate: three runs failing the same way is one defect with three
+         *     occurrences, and an occurrence that leaves no row is one nobody can count
+         *     (F-9.10).
+         */
+        post: operations["promoteResult"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analyses/{analysisID}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Say whether an analysis helped
+         * @description A thumb up or down, stored with the prompt version behind the analysis, so
+         *     prompt iteration is argued with numbers rather than impressions (F-9.6). One
+         *     vote per person: voting again replaces the previous vote.
+         */
+        put: operations["setAnalysisFeedback"];
+        post?: never;
+        /** Withdraw a vote */
+        delete: operations["clearAnalysisFeedback"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analyses/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How each prompt version has been received
+         * @description Helpful and unhelpful counts per prompt version. This is the export that makes
+         *     a prompt change measurable, which is why the version is stored on every vote
+         *     rather than joined at read time.
+         */
+        get: operations["getFeedbackByPromptVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/defects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A project's defects
+         * @description Newest first, cursor paginated, filterable by status, severity, assignee, and
+         *     test case. Duplicates are hidden by default: a list showing every recurrence
+         *     of the same bug is a list that hides the bugs.
+         */
+        get: operations["listDefects"];
+        put?: never;
+        /**
+         * File a defect by hand
+         * @description The built-in tracker works with no external integration configured at all,
+         *     which is why it ships with the analysis phase rather than with the
+         *     integrations (F-9.7).
+         */
+        post: operations["createDefect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/defects/{defectID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One defect */
+        get: operations["getDefect"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edit a defect
+         * @description A partial edit: a field that is absent is left alone, so a status change and a
+         *     reassignment are the same endpoint without either overwriting the other. The
+         *     resolution time follows the status rather than being set by a caller.
+         */
+        patch: operations["updateDefect"];
+        trace?: never;
+    };
+    "/api/v1/defects/{defectID}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Link or unlink a duplicate
+         * @description Points this defect at the original, or unlinks it when `duplicateOf` is null.
+         *     Reversible on purpose: the platform proposes a link from a deterministic match
+         *     on the test case and the normalised root cause, and a person who knows the two
+         *     failures are unrelated has to be able to say so (F-9.10).
+         */
+        put: operations["linkDefectDuplicate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/defects/{defectID}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A defect's thread */
+        get: operations["listDefectComments"];
+        put?: never;
+        /** Comment on a defect */
+        post: operations["commentOnDefect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A project's generated reports */
+        get: operations["listReports"];
+        put?: never;
+        /**
+         * Generate a report
+         * @description Queued rather than rendered inline: a project with hundreds of runs and dozens
+         *     of analyses is not a request to hold open (F-12.5).
+         *
+         *     Both formats render the same content from the same template. The PDF is printed
+         *     by the browser in the runner image, so a worker with no container runtime
+         *     produces HTML and refuses PDF with a stated reason rather than returning HTML
+         *     under a `.pdf` name.
+         */
+        post: operations["requestReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/{reportID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One report's status */
+        get: operations["getReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/{reportID}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download a finished report
+         * @description Streamed from object storage. A report that is still generating is refused with
+         *     `report_not_ready` rather than a 404: "not yet" and "never existed" are
+         *     different answers to a client that is polling.
+         */
+        get: operations["downloadReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/repository": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The project's connected repository
+         * @description Includes what detection found and which files it read. An unknown stack is
+         *     reported as unknown with that list, because a guess nobody can check is worse
+         *     than an honest gap (F-6.7).
+         */
+        get: operations["getRepository"];
+        /**
+         * Connect or replace the repository
+         * @description Clone by URL with an optional token. The token is stored as a project secret
+         *     and used by the worker; it never enters a runner container and is never
+         *     returned once stored (F-3.5).
+         *
+         *     The URL is checked against the project's target allowlist before any clone,
+         *     for the same reason a run's target is: a worker cloning a URL a user supplied
+         *     sits inside the network.
+         */
+        put: operations["connectRepository"];
+        post?: never;
+        /** Disconnect the repository */
+        delete: operations["disconnectRepository"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/repository/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clone the repository and detect its stack
+         * @description Queued, because a clone is slow and a checkout is large. The workspace is
+         *     removed when the job ends, including on failure: nothing downstream holds one
+         *     open, because a shared checkout is one job changing files under another.
+         */
+        post: operations["syncRepository"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/repository/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the last exploration found in the code
+         * @description Controllers, services, data access, and the paths with no test, plus the trail
+         *     of what the agent read to find them (F-4.4).
+         *
+         *     Two fields are worth reading before the map itself. `cutShort` says the step
+         *     budget ran out, so the map describes less than the agent wanted to cover.
+         *     `unknowns` is what it could not work out, including any file it named that does
+         *     not exist at this revision — those are dropped rather than shown, because a
+         *     test written against a file that is not there is worse than a gap.
+         */
+        get: operations["getRepositoryMap"];
+        put?: never;
+        /**
+         * Explore the repository and produce a map
+         * @description Queued. The agent chooses one action at a time — read, grep, or glob — and the
+         *     worker executes it against the checkout, because the process that owns the
+         *     filesystem is the one that can safely validate a path. The budget comes from
+         *     settings and running out ends the pass with a map rather than a failure.
+         */
+        post: operations["mapRepository"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/coverage/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Measured code coverage
+         * @description Line and branch coverage as **the repository's own coverage tool** reported it,
+         *     with per-file detail (F-7.14, F-12.3). The tool and the exact command are
+         *     returned with the numbers, because "coverage is 74%" only means something
+         *     alongside "as measured by vitest run --coverage".
+         *
+         *     This is deliberately a different endpoint from requirement coverage and the two
+         *     are never merged (FR-7.2): eighty per cent of requirements having a test case
+         *     and eighty per cent of lines being executed are different facts, and averaging
+         *     them describes neither.
+         *
+         *     A project with no repository connected returns `404` with a reason rather than
+         *     zero, because zero would be a claim about code this platform does not have.
+         */
+        get: operations["getCodeCoverage"];
+        put?: never;
+        /**
+         * Run the repository's coverage tool
+         * @description Queued. The suite runs inside the runner container with no network, because
+         *     running a client's tests on the worker would execute their code and their
+         *     dependencies' install scripts on the host that holds every project's
+         *     credentials.
+         *
+         *     A repository that declares no coverage tool is refused rather than measured with
+         *     instrumentation this platform added: that number would not match the client's
+         *     own CI, which is the only thing the number is for.
+         */
+        post: operations["measureCoverage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/unit-tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Write unit tests for the untested paths
+         * @description Takes its targets from the repository map's untested paths, so an exploration has
+         *     to have run first (F-6.3). The framework is the repository's own, read from its
+         *     manifest rather than chosen by the model, and every generated file is compiled
+         *     and scanned in the image that owns the toolchain before it is kept — with one
+         *     correction attempt when it is rejected (BE-3.4).
+         */
+        post: operations["generateUnitTests"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/ui-flows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A project's discovery history
+         * @description One row per discovery, newest first, without the graphs: a graph describes an
+         *     application as it behaved at a moment, and when a later discovery finds two
+         *     fewer pages the earlier one is what makes that visible.
+         */
+        get: operations["listUIFlows"];
+        put?: never;
+        /**
+         * Walk the application and record what a user can do
+         * @description Queued. A discovery drives a real browser through the application, one action at
+         *     a time, and records the pages, what can be done on each, and the journeys worth
+         *     testing (F-8.1). That beats reading component source, which cannot see that a
+         *     route redirects to a login or that a panel renders only for an admin.
+         *
+         *     Three things are enforced by the platform rather than asked for in a prompt: the
+         *     action budget, so a discovery terminates; a refusal of anything that looks
+         *     destructive, because this runs against somebody's environment; and the
+         *     credentials, which are substituted inside the browser container and never
+         *     reach the model or the recorded graph (BE-7.3).
+         */
+        post: operations["discoverUIFlows"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/ui-flows/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The newest discovered flow graph
+         * @description The graph is reviewable before anything is generated from it, which is the
+         *     reason it is stored rather than passed straight to the generator: a suite built
+         *     from a wrong graph is one somebody debugs test by test, and the graph is where
+         *     the mistake is cheap to see (F-8.3).
+         *
+         *     Two fields are worth reading before the pages. `cutShort` says the action
+         *     budget ran out, so the graph covers less than the agent intended. `unreachable`
+         *     is what was seen in a link and never opened, including anything the agent
+         *     recorded without walking — those are dropped rather than shown, because a spec
+         *     that navigates somewhere nobody reached fails on its first step.
+         */
+        get: operations["getLatestUIFlowGraph"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ui-flows/{flowID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One discovered flow graph */
+        get: operations["getUIFlowGraph"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ui-flows/{flowID}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record that somebody has read this graph
+         * @description Generating from an unreviewed graph is still allowed: blocking it would mean an
+         *     installation that wants the whole path automated cannot have it. What the flag
+         *     buys is that "nobody looked at this" is visible rather than assumed.
+         */
+        post: operations["reviewUIFlowGraph"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/ui-tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Write Playwright specs from a discovered flow graph
+         * @description One spec per flow, taken from a graph that was walked in a real browser rather
+         *     than from a router's declarations (F-6.4). By default the newest graph; name a
+         *     graph to generate from the one somebody reviewed.
+         *
+         *     Two gates stand between a generated file and the suite. The **selector policy**
+         *     runs first and is a pure function of the text: a spec containing a positional
+         *     selector — `nth-child`, a numeric `.nth(n)`, a structural pseudo-class, XPath —
+         *     is rejected and regenerated, not merged with a warning. Then the file is
+         *     compiled and scanned in the image that owns the toolchain, with one correction
+         *     attempt (BE-3.4). A file that fails either gate twice is kept and marked for
+         *     review rather than dropped silently.
+         */
+        post: operations["generateUITests"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runID}/artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The recordings a run left behind
+         * @description The video, trace, and screenshot of every failing test, captured on failure and
+         *     discarded on success: a trace per passing test is megabytes nobody opens, and a
+         *     trace for the one test that failed overnight is the difference between a bug
+         *     report somebody can act on and "it was red yesterday" (F-7.10).
+         *
+         *     Each item carries a time-limited `url` when the configured storage can sign
+         *     one. When it cannot, the item still lists a `downloadPath`, which streams the
+         *     same bytes through the platform.
+         */
+        get: operations["listRunArtifacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/run-results/{resultID}/artifacts/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download one recording
+         * @description Streamed through the platform, so a viewer works whatever the storage driver is:
+         *     the local-disk driver cannot sign a URL, and an artifact nobody can fetch is an
+         *     artifact that was not captured.
+         */
+        get: operations["downloadRunArtifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/quarantines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The tests this project excuses
+         * @description A test that flakes more often than the threshold stops failing the run and
+         *     appears here instead (F-7.12). It keeps running and keeps recording results, so
+         *     a fix is visible when it lands.
+         *
+         *     Two fields make the list actionable rather than decorative: `ownerId`, who is
+         *     answerable, and `ageHours` with `stale`, which say whether a quarantine is a
+         *     decision somebody made last week or one nobody has looked at since spring.
+         *     Nothing is released automatically — turning a forgotten flaky test into a
+         *     suddenly red suite is the failure this feature exists to prevent.
+         */
+        get: operations["listQuarantines"];
+        put?: never;
+        /**
+         * Quarantine a test by hand
+         * @description For the case the threshold cannot see: a test somebody already knows is
+         *     unreliable, or one whose environment is broken for a week. Recorded as a manual
+         *     quarantine, with whoever asked as its owner.
+         */
+        post: operations["quarantineTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quarantines/{quarantineID}/owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Take ownership of a quarantine
+         * @description An automatic quarantine starts with nobody's name on it, which is exactly what
+         *     the review list exists to surface. This is how somebody claims one.
+         */
+        put: operations["assignQuarantineOwner"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quarantines/{quarantineID}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End a quarantine
+         * @description The test starts failing the run again from the next run onwards. The row is kept
+         *     rather than deleted: the history of what used to be flaky is what tells somebody
+         *     whether a fix held.
+         */
+        post: operations["releaseQuarantine"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/test-data/shapes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What this project can generate data for
+         * @description One entry per endpoint with a schema worth generating from, with its field names
+         *     so a UI can offer per-field AI enrichment rather than asking somebody to type a
+         *     path exactly. Endpoints that declare no request or response schema are omitted:
+         *     an option that produces one empty record is not an option.
+         */
+        get: operations["listTestDataShapes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/test-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate test data from the specification's own schemas
+         * @description Deterministic and free (F-10.1). The response carries the seed that produced it,
+         *     and the same seed and count reproduce the data byte for byte — which is what
+         *     makes a failure on record 63 reproducible instead of a story about somebody's
+         *     machine.
+         *
+         *     Type, format, pattern, enum, and the length and range bounds are honoured,
+         *     because data that violates the schema tests the validator rather than the
+         *     endpoint. **Payment card numbers come only from published test ranges** and are
+         *     never freshly generated (F-10.4).
+         *
+         *     `fields` opts individual fields into an AI pass for the cases where semantics
+         *     matter — a plausible address, a correctly shaped tax identifier (F-10.2). It is
+         *     per field on purpose: the bulk is a seeded faker, and a model asked for two
+         *     thousand values would cost money to be occasionally wrong. Whatever the model
+         *     does not answer keeps the generated value, and the response says so.
+         *
+         *     Set `format` to stream the set as CSV, JSON, or SQL inserts instead of the JSON
+         *     envelope (F-10.5).
+         */
+        post: operations["generateTestData"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/test-data/invalid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate boundary and invalid records
+         * @description Every record breaks exactly **one** constraint and names which (F-10.3). One at
+         *     a time, because a payload that is simultaneously too long, the wrong type, and
+         *     missing a required field tells you the endpoint rejected something without
+         *     telling you what it checks.
+         *
+         *     The values come from the schema's own constraints — a field with `maxLength: 40`
+         *     gets a 41-character value, a field with `minimum: 1` gets 0 — so the set is
+         *     specific to the API rather than generic noise. `injection` cases carry
+         *     attack-shaped values; the expectation for those is not "rejected" but "stored
+         *     and returned verbatim, never executed", because an API may legitimately accept
+         *     an apostrophe in a surname.
+         */
+        post: operations["generateInvalidTestData"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/test-data/tables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What tables an uploaded SQL dump declares
+         * @description Reads `CREATE TABLE` statements out of a schema-only dump and reports the columns
+         *     in the terms that shape generated data: type, length, nullability, and any value
+         *     list a check constraint declares (F-3.7).
+         *
+         *     The parse is deliberately narrow — triggers, functions, grants, and data are
+         *     ignored. A dump is a program, and a parser with opinions about a client's schema
+         *     beyond its column list would be a parser it cannot justify.
+         */
+        get: operations["listDumpTables"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/mock-server": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The project's mock server
+         * @description The status, the URL a client application points at, and the fault settings in
+         *     force (F-10.6). The status is reconciled against the host on every read: a row
+         *     that says running with no container behind it would be a panel telling somebody
+         *     an untruth.
+         */
+        get: operations["getMockServer"];
+        put?: never;
+        /**
+         * Start or replace the mock server
+         * @description Generated from the project's own specification: one route per endpoint, with
+         *     schema-valid response bodies produced by the same seeded generator that writes
+         *     test data (F-10.6). The bodies are generated here in Go, not in the container, so
+         *     the mock has no dependencies and there is no second faker to keep in step.
+         *
+         *     `faults` is what a real staging environment cannot give a team: a fixed delay, a
+         *     share of requests that fail with chosen status codes, and a share that never
+         *     answer at all (F-10.7). The pattern is seeded, so "30% failures" is the same 30%
+         *     on the next run and a client test that fails is failing for a reason.
+         *
+         *     It runs as its own container with the same isolation as every other — read-only
+         *     root filesystem, non-root, dropped capabilities, cgroup limits, no outbound
+         *     network — with one exception it has to have: a published port. Its address is
+         *     added to the project's target allowlist automatically, so a generated suite can
+         *     reach it without anybody editing settings after every restart.
+         *
+         *     Starting while one is running replaces it. The intent is "serve this
+         *     configuration", not "add a second container".
+         *
+         *     Queued rather than synchronous, because a mock needs a container and this process
+         *     deliberately has no container runtime — the same split as running a suite.
+         */
+        post: operations["startMockServer"];
+        /**
+         * Stop the mock server
+         * @description Safe to call twice: stopping a container that is already gone is a success, and
+         *     the row is corrected either way. The routes are kept, so starting again serves
+         *     the same mock.
+         */
+        delete: operations["stopMockServer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/performance-tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate and run a load test
+         * @description A `code`-tier agent writes a k6 script from the API's endpoints under the load
+         *     profile you set, and the script runs in the k6 container with the same isolation
+         *     as every other run (F-11.1, F-11.2). The profile — virtual users, ramp, hold — is
+         *     yours, not the model's: it says how hard to hit the target, and the agent is told
+         *     to use the numbers exactly.
+         *
+         *     Performance testing is off by default and must be enabled per project by a lead.
+         *     The first run against a **new host** is refused with `host_confirmation_required`
+         *     until you resend the request with `confirmHost` naming that exact host — because
+         *     a load test pointed at a machine you do not own is a denial-of-service attempt
+         *     (BE-9.5).
+         *
+         *     The measured series — latency percentiles and throughput — is read from
+         *     `/runs/{runID}/metrics` when the run finishes.
+         */
+        post: operations["startPerformanceTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runID}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A performance run's measured series
+         * @description Latency percentiles and throughput, read from k6's own summary (F-11.2). Only a
+         *     performance run produces them; a functional run returns `no_performance_metrics`.
+         */
+        get: operations["getRunMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectID}/security-scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plan and run a security scan
+         * @description A `code`-tier agent chooses which endpoints and which **reviewed library
+         *     payloads** to probe — SQLi, XSS, JWT tampering, IDOR, and the rest — and the
+         *     platform sends them (F-11.3). The agent never writes an attack string: the
+         *     payloads live in a versioned Go library, and the plan names payload IDs, so no
+         *     request this platform sends was chosen by a model.
+         *
+         *     Each probe that its detection rule matches becomes a finding with a severity,
+         *     the evidence the rule matched, and reproduction steps, promotable to a defect
+         *     through the same path a failed test uses (BE-9.4).
+         *
+         *     Security testing is off by default and enabled per project by a lead. The first
+         *     scan against a **new host** is refused with `host_confirmation_required` until
+         *     resent with `confirmHost` naming it — pointed at a machine you do not own, these
+         *     are indistinguishable from an intrusion attempt (BE-9.5).
+         */
+        post: operations["startSecurityScan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runID}/findings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A security scan's findings
+         * @description One per probe that succeeded, most severe first, each citing the reviewed payload
+         *     it came from and the evidence the detection rule matched (F-11.4). A finding is a
+         *     failed result with security detail, so it is promoted to a defect through the
+         *     result's own promote path.
+         */
+        get: operations["listRunFindings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/servers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Configured MCP servers
+         * @description MCP is entirely optional: every capability it fronts has a built-in that needs no
+         *     server, and this list being empty is a supported configuration (ai-architecture.md
+         *     5.4).
+         */
+        get: operations["listMCPServers"];
+        put?: never;
+        /**
+         * Add an MCP server
+         * @description A new server starts **deny-all**: no tools are enabled until an admin runs the
+         *     connection test and opts into specific ones. The credential is encrypted, and a
+         *     project-scoped server is reachable only from its project (ai-architecture.md 5.4,
+         *     5.5).
+         */
+        post: operations["createMCPServer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/servers/{serverID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One MCP server */
+        get: operations["getMCPServer"];
+        /**
+         * Update an MCP server and its allowlist
+         * @description This is where an admin opts into tools after a connection test: `enabledTools` is
+         *     the allowlist, and a tool not in it is refused before it leaves the platform.
+         */
+        put: operations["updateMCPServer"];
+        post?: never;
+        /**
+         * Remove an MCP server
+         * @description The server's call history is kept: the rows lose their server link but not the
+         *     record that the calls happened, which is what an audit needs.
+         */
+        delete: operations["deleteMCPServer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/servers/{serverID}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test the connection and list the server's tools
+         * @description Connects to the server and lists the tools it exposes, so an admin can opt into
+         *     specific ones. The tools are stored on the server and the health status updated;
+         *     nothing is enabled by this call (ai-architecture.md 5.4).
+         */
+        post: operations["testMCPServer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/calls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The MCP call audit
+         * @description Every MCP tool call — server, tool, redacted arguments, status, agent, job — most
+         *     recent first. A call the allowlist refused appears as `denied` (ai-architecture.md
+         *     5.5).
+         */
+        get: operations["listMCPCalls"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health of every optional integration
+         * @description One line per adapter across every capability — the notifier channels, the defect
+         *     trackers, the source providers, the run triggers, the object store — with its
+         *     state: `builtin` for the always-on default, `active` for a configured external
+         *     adapter that answers, `not_configured` for one with no settings (FR-10.6). This is
+         *     how an admin sees at a glance what is in use and what has degraded to the built-in.
+         */
+        get: operations["listIntegrations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -439,6 +2889,116 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
+        /**
+         * @description Where a value is stored. Resolution order is user, then project, then global,
+         *     then the declared default.
+         * @enum {string}
+         */
+        SettingScope: "global" | "project" | "user";
+        /**
+         * @description Selects the form control and the accessor. A `secret` is encrypted at rest
+         *     and never returned.
+         * @enum {string}
+         */
+        SettingKind: "string" | "int" | "number" | "bool" | "enum" | "string_list" | "duration" | "object" | "secret";
+        /**
+         * @description One setting's complete declaration.
+         * @example {
+         *       "key": "storage.retention_days",
+         *       "category": "Storage",
+         *       "label": "Artifact retention (days)",
+         *       "helpText": "Logs, screenshots, videos, and traces older than this are deleted.",
+         *       "kind": "int",
+         *       "default": 90,
+         *       "scopes": [
+         *         "global"
+         *       ],
+         *       "minRole": "admin",
+         *       "isSecret": false,
+         *       "restartRequired": false,
+         *       "schema": {
+         *         "title": "Artifact retention (days)",
+         *         "type": "integer",
+         *         "minimum": 1,
+         *         "maximum": 3650
+         *       }
+         *     }
+         */
+        SettingEntry: {
+            /** @example runner.timeout_seconds */
+            key: string;
+            /**
+             * @description Groups the entry on the settings screen.
+             * @example Runner
+             */
+            category: string;
+            label: string;
+            helpText?: string;
+            kind: components["schemas"]["SettingKind"];
+            /**
+             * @description The value used when nothing is stored at any scope. Absent for a secret,
+             *     which has no default by design.
+             */
+            default?: unknown;
+            scopes: components["schemas"]["SettingScope"][];
+            minRole: components["schemas"]["Role"];
+            isSecret: boolean;
+            /** @description Badge the field and warn on save. */
+            restartRequired: boolean;
+            /**
+             * @description JSON Schema for this value. Convert it to your own validator at runtime
+             *     rather than hand-writing rules, so client and server validation come from
+             *     one declaration.
+             */
+            schema: {
+                [key: string]: unknown;
+            };
+        };
+        SettingsRegistry: {
+            entries: components["schemas"]["SettingEntry"][];
+        };
+        /**
+         * @description One resolved value. `source` is which scope supplied it, so a UI can show
+         *     that a value is inherited.
+         */
+        SettingValue: {
+            key: string;
+            /** @description Absent for a secret. Use `secret` instead. */
+            value?: unknown;
+            source: components["schemas"]["SettingScope"];
+            /** @description True when nothing was stored and the declared default was used. */
+            fromDefault: boolean;
+            /** Format: date-time */
+            updatedAt?: string | null;
+            secret?: components["schemas"]["SecretRead"];
+        };
+        SettingValues: {
+            values: components["schemas"]["SettingValue"][];
+        };
+        SettingChange: {
+            key: string;
+            scope: components["schemas"]["SettingScope"];
+            /**
+             * Format: uuid
+             * @description Required for a project-scoped change.
+             */
+            projectID?: string;
+            /**
+             * Format: uuid
+             * @description Required for a user-scoped change. A user may always write their own;
+             *     writing another user's needs the setting's minimum role.
+             */
+            userID?: string;
+            /**
+             * @description The new value, matching the entry's schema. For a secret, the plaintext
+             *     as a JSON string; it is encrypted before it is stored and cannot be read
+             *     back.
+             */
+            value: unknown;
+        };
+        UpdateSettingsRequest: {
+            changes: components["schemas"]["SettingChange"][];
+        };
         /** @enum {string} */
         CheckStatus: "ok" | "failing" | "not_configured";
         DependencyCheck: {
@@ -461,6 +3021,1839 @@ export interface components {
             /** @enum {string} */
             status: "ok" | "unavailable";
             checks: components["schemas"]["DependencyCheck"][];
+        };
+        /**
+         * @description What first-run setup still needs. Only `adminExists` and `storageReachable`
+         *     block completion; a missing AI provider is reported so the wizard can offer
+         *     it, and enforced at enqueue time.
+         * @example {
+         *       "complete": false,
+         *       "adminExists": false,
+         *       "storageReachable": true,
+         *       "storageProvider": "local-disk",
+         *       "aiProviderConfigured": false
+         *     }
+         */
+        SetupStatus: {
+            /** @description True when an admin exists and storage answered a write-and-read-back probe. */
+            complete: boolean;
+            adminExists: boolean;
+            storageReachable: boolean;
+            /** @description Why storage failed, if it did. Never contains a credential. */
+            storageDetail?: string;
+            /** @example local-disk */
+            storageProvider: string;
+            /** @description False is not a setup failure. AI jobs are refused at enqueue with a clear reason. */
+            aiProviderConfigured: boolean;
+        };
+        CreateAdminRequest: {
+            /** Format: email */
+            email: string;
+            name: string;
+            password: string;
+            /** @description IANA name. Defaults to the platform default when omitted. */
+            timezone?: string;
+        };
+        /**
+         * @description The kinds of test a project generates. A type that is not implemented yet is
+         *     still selectable and is returned as unavailable, so the UI disables it with a
+         *     reason rather than hiding it (F-3.12).
+         * @enum {string}
+         */
+        TestType: "test_cases" | "api_tests" | "unit_tests" | "ui_tests" | "performance_tests" | "security_tests" | "test_data" | "mock_server";
+        /**
+         * @description One selected test type and whether the platform can act on it yet.
+         * @example {
+         *       "type": "ui_tests",
+         *       "available": false,
+         *       "reason": "UI tests arrive in phase 7."
+         *     }
+         */
+        TestTypeSelection: {
+            type: components["schemas"]["TestType"];
+            available: boolean;
+            /**
+             * @description Why it is unavailable, phrased for a user.
+             * @example UI tests arrive in phase 7.
+             */
+            reason?: string;
+        };
+        Project: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string;
+            /** Format: uuid */
+            ownerId: string;
+            testTypes: components["schemas"]["TestTypeSelection"][];
+            /**
+             * @description Without this a project may only use providers marked local. Enforced
+             *     server-side before an AI job is enqueued (F-16.13).
+             */
+            externalAiApproved: boolean;
+            /** @description An archived project is readable and read-only. */
+            archived: boolean;
+            /** Format: date-time */
+            archivedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ProjectPage: {
+            items: components["schemas"]["Project"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        CreateProjectRequest: {
+            name: string;
+            description?: string;
+            testTypes?: components["schemas"]["TestType"][];
+        };
+        /** @description Omitted fields are left alone. */
+        UpdateProjectRequest: {
+            name?: string;
+            description?: string;
+            testTypes?: components["schemas"]["TestType"][];
+        };
+        /**
+         * @description Membership carries its own role, separate from the platform role, and the
+         *     narrower of the two applies.
+         */
+        ProjectMember: {
+            /** Format: uuid */
+            userId: string;
+            /** Format: email */
+            email: string;
+            name: string;
+            role: components["schemas"]["Role"];
+            /** @description Ownership counts as membership, so an owner never has to add themselves. */
+            isOwner: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ProjectMemberList: {
+            items: components["schemas"]["ProjectMember"][];
+        };
+        /**
+         * @description What an input is, which decides how it is parsed. Values grow with the
+         *     phases, so this is a checked set rather than a database enum.
+         * @enum {string}
+         */
+        ArtifactKind: "openapi" | "postman" | "requirement_text" | "source_archive" | "sql_dump" | "document";
+        Artifact: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            kind: components["schemas"]["ArtifactKind"];
+            filename: string;
+            /** @description The sniffed type, not what the client claimed. */
+            contentType: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            /**
+             * @description Hex. Computed while streaming, and the identity of the content.
+             * @example 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+             */
+            sha256: string;
+            /** @description A changed file with the same name and kind increments this; earlier versions stay. */
+            version: number;
+            /**
+             * Format: uuid
+             * @description Groups the versions of one logical input.
+             */
+            lineageId: string;
+            /**
+             * @description Present on upload. True means this exact content was already stored, so
+             *     nothing was written and no generation was re-run (FR-1.4).
+             */
+            deduplicated?: boolean;
+            /** Format: uuid */
+            uploadedBy?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ArtifactPage: {
+            items: components["schemas"]["Artifact"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        /**
+         * @description Chains are declared in one place on the server. A handler never calls the
+         *     next handler directly, so every stage is independently retryable and
+         *     independently observable.
+         * @enum {string}
+         */
+        JobChain: "noop" | "ai_smoke" | "ingest" | "generate" | "execute" | "analyse";
+        SubmitJobRequest: {
+            chain: components["schemas"]["JobChain"];
+            /**
+             * Format: uuid
+             * @description The input to work from, where the chain needs one.
+             */
+            artifactId?: string;
+        };
+        /** @enum {string} */
+        JobEventLevel: "debug" | "info" | "warn" | "error";
+        /** @description One line of the live event log. `id` doubles as the SSE Last-Event-ID. */
+        JobEvent: {
+            /**
+             * @description Ascending. Pass the last one you saw as Last-Event-ID to resume.
+             * @example 4821
+             */
+            id: string;
+            level: components["schemas"]["JobEventLevel"];
+            message: string;
+            /** Format: date-time */
+            at: string;
+        };
+        Job: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId?: string | null;
+            /**
+             * @description The handler that runs this stage.
+             * @example noop.stage1
+             */
+            type: string;
+            chain?: components["schemas"]["JobChain"];
+            status: components["schemas"]["JobStatus"];
+            progress: number;
+            attempts: number;
+            maxAttempts: number;
+            /** @description Set once retries are exhausted. Never carries a credential. */
+            error?: string | null;
+            /** Format: uuid */
+            parentJobId?: string | null;
+            /** @description Present on a parent job, so one request describes the whole chain. */
+            stages?: components["schemas"]["Job"][];
+            /** @description The most recent event lines. The SSE stream carries the rest. */
+            events?: components["schemas"]["JobEvent"][];
+            /** Format: date-time */
+            queuedAt: string;
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            finishedAt?: string | null;
+        };
+        JobPage: {
+            items: components["schemas"]["Job"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        /** @enum {string} */
+        NotificationKind: "job_completed" | "job_failed" | "job_needs_input" | "run_completed" | "drift_detected" | "integration_failed" | "admin_alert";
+        Notification: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["NotificationKind"];
+            title: string;
+            body: string;
+            /**
+             * @description Deep link to what this is about (FR-8.5).
+             * @example /projects/6f1c9d2e/jobs/8a3b1c22
+             */
+            link: string;
+            read: boolean;
+            /** Format: date-time */
+            readAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        NotificationPage: {
+            items: components["schemas"]["Notification"][];
+            /** @description Included so the badge and the list cannot disagree. */
+            unread: number;
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        AuditEntry: {
+            /**
+             * @description Ascending, and the pagination cursor.
+             * @example 18422
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Null for something the system did on its own, such as a scheduled check.
+             */
+            actorId?: string | null;
+            /**
+             * @description Recorded separately from the actor row, because an audit entry that
+             *     cannot name who acted is not an audit entry.
+             */
+            actorEmail?: string;
+            /** @example setting_changed */
+            action: string;
+            /** @description What was acted on: an email, a setting key, a host. */
+            subject: string;
+            /** Format: uuid */
+            projectId?: string | null;
+            ip?: string | null;
+            /** @description Typed context. Passes through the logger's redaction, so it holds no secret. */
+            detail?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            at: string;
+        };
+        AuditEntryPage: {
+            items: components["schemas"]["AuditEntry"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        WebhookTriggerRequest: {
+            chain: components["schemas"]["JobChain"];
+            /** Format: uuid */
+            artifactId?: string;
+            /** @description Free text recorded on the job, for example a branch or a build number. */
+            reference?: string;
+        };
+        /**
+         * @description `openai-compatible` is the row that makes "any other provider" real: one
+         *     adapter reaches Ollama, vLLM, LiteLLM, OpenRouter, Together, Groq,
+         *     Fireworks and DeepSeek.
+         * @enum {string}
+         */
+        AIProviderKind: "anthropic" | "bedrock" | "vertex" | "openai" | "azure-openai" | "gemini" | "openai-compatible";
+        /**
+         * @description Where a provider processes data. A project without external AI approval may
+         *     only be assigned a `local` provider, enforced server-side before enqueue.
+         * @enum {string}
+         */
+        AIDataResidency: "local" | "regional" | "external";
+        /**
+         * @description What a call is for, rather than which model runs it.
+         * @enum {string}
+         */
+        AITier: "reasoning" | "code" | "cheap" | "vision";
+        /** @enum {string} */
+        AIHealth: "unknown" | "ok" | "failing";
+        /**
+         * @description What a model can actually do. Features are gated on this: a model without
+         *     tool use is disqualified from the agents that need tools, and the reason is
+         *     returned so the UI explains rather than hides.
+         */
+        AICapabilities: {
+            toolUse: boolean;
+            vision: boolean;
+            /**
+             * @description prompt_only adds a JSON-repair pass, because the provider enforces nothing.
+             * @enum {string}
+             */
+            structuredOutput: "native" | "tool_based" | "prompt_only";
+            /**
+             * @description Drives the cost estimate. The same 40-endpoint specification can differ
+             *     by an order of magnitude between a provider with explicit caching and
+             *     one with none.
+             * @enum {string}
+             */
+            promptCaching: "explicit" | "automatic" | "none";
+            effortControl: boolean;
+            maxToolIterations: number;
+        };
+        AIProvider: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["AIProviderKind"];
+            /** @description Non-secret settings: base URL, region, project, API version, deployment. */
+            config?: {
+                [key: string]: unknown;
+            };
+            dataResidency: components["schemas"]["AIDataResidency"];
+            enabled: boolean;
+            isDefault: boolean;
+            credentials: components["schemas"]["SecretRead"];
+            health: components["schemas"]["AIHealth"];
+            healthDetail?: string;
+            /** Format: date-time */
+            healthCheckedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        AIProviderList: {
+            items: components["schemas"]["AIProvider"][];
+            /** @description Kinds this build can serve, so the UI cannot offer one that would fail. */
+            kinds: components["schemas"]["AIProviderKind"][];
+        };
+        CreateAIProviderRequest: {
+            name: string;
+            kind: components["schemas"]["AIProviderKind"];
+            config?: {
+                [key: string]: unknown;
+            };
+            dataResidency?: components["schemas"]["AIDataResidency"];
+            /**
+             * @description Shape varies by kind. Write-only: it is encrypted at rest and reads back
+             *     as {isSet, updatedAt, hint}.
+             */
+            credentials: {
+                [key: string]: string;
+            };
+            /** @default true */
+            enabled: boolean;
+            /** @default false */
+            makeDefault: boolean;
+        };
+        UpdateAIProviderRequest: {
+            name?: string;
+            config?: {
+                [key: string]: unknown;
+            };
+            dataResidency?: components["schemas"]["AIDataResidency"];
+            /** @description Omit to leave the stored credentials alone. Present replaces them. */
+            credentials?: {
+                [key: string]: string;
+            };
+            /** @default true */
+            enabled: boolean;
+            /** @default false */
+            makeDefault: boolean;
+        };
+        AIModel: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            providerId: string;
+            /** @description The provider's own identifier. */
+            modelId: string;
+            displayName?: string;
+            tiers: components["schemas"]["AITier"][];
+            capabilities: components["schemas"]["AICapabilities"];
+            /**
+             * @description USD per million input tokens. A string, because money is decimal and JSON numbers are not.
+             * @example 15.00
+             */
+            priceInput: string;
+            priceOutput: string;
+            priceCacheRead?: string | null;
+            priceCacheWrite?: string | null;
+            maxInputTokens?: number | null;
+            maxOutputTokens?: number | null;
+            enabled: boolean;
+        };
+        AIModelList: {
+            items: components["schemas"]["AIModel"][];
+        };
+        CreateAIModelRequest: {
+            /** Format: uuid */
+            providerId: string;
+            modelId: string;
+            displayName?: string;
+            tiers: components["schemas"]["AITier"][];
+            capabilities?: components["schemas"]["AICapabilities"];
+            priceInput?: string;
+            priceOutput?: string;
+            priceCacheRead?: string;
+            priceCacheWrite?: string;
+            maxInputTokens?: number;
+            maxOutputTokens?: number;
+            /** @default true */
+            enabled: boolean;
+        };
+        UpdateAIModelRequest: {
+            displayName?: string;
+            tiers?: components["schemas"]["AITier"][];
+            capabilities?: components["schemas"]["AICapabilities"];
+            priceInput?: string;
+            priceOutput?: string;
+            priceCacheRead?: string;
+            priceCacheWrite?: string;
+            maxInputTokens?: number;
+            maxOutputTokens?: number;
+            /** @default true */
+            enabled: boolean;
+        };
+        AITierAssignment: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            scope: "global" | "project";
+            /** Format: uuid */
+            projectId?: string | null;
+            tier: components["schemas"]["AITier"];
+            /** Format: uuid */
+            modelId: string;
+            /**
+             * Format: uuid
+             * @description Used on retryable failures only: rate limit, overload, connection
+             *     failure. Never on a 400, which would bill the same mistake twice.
+             */
+            fallbackModelId?: string | null;
+            effort?: string | null;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        AITierAssignmentList: {
+            items: components["schemas"]["AITierAssignment"][];
+        };
+        AssignAITierRequest: {
+            tier: components["schemas"]["AITier"];
+            /** Format: uuid */
+            modelId: string;
+            /** Format: uuid */
+            fallbackModelId?: string;
+            effort?: string;
+            /**
+             * Format: uuid
+             * @description Omitted assigns the global tier.
+             */
+            projectID?: string;
+        };
+        AIProbeResult: {
+            /** Format: uuid */
+            providerId: string;
+            /** Format: uuid */
+            modelId: string;
+            reachable: boolean;
+            capabilities: components["schemas"]["AICapabilities"];
+            /** @description What failed, phrased for a user. Never contains a credential. */
+            detail?: string;
+            latencyMs?: number;
+        };
+        AIBudget: {
+            /**
+             * @description Zero means no ceiling.
+             * @example 500.00
+             */
+            ceilingUsd: string;
+            /** @enum {string} */
+            period: "day" | "week" | "month";
+            /** @enum {string} */
+            onCeiling: "block" | "warn";
+            spentUsd: string;
+            /** Format: date-time */
+            periodStart: string;
+            /** Format: uuid */
+            projectId?: string | null;
+        };
+        UpdateAIBudgetRequest: {
+            ceilingUsd?: string;
+            /** @enum {string} */
+            period?: "day" | "week" | "month";
+            /** @enum {string} */
+            onCeiling?: "block" | "warn";
+            /**
+             * Format: uuid
+             * @description Sets the ceiling for one project instead of the platform.
+             */
+            projectID?: string;
+        };
+        AISpendGroup: {
+            /** @description Provider ID, project ID, or agent name, depending on the grouping. */
+            key: string;
+            label: string;
+            /** Format: int64 */
+            calls: number;
+            /** Format: int64 */
+            inputTokens: number;
+            /** Format: int64 */
+            outputTokens: number;
+            /** Format: int64 */
+            cacheReadTokens: number;
+            costUsd: string;
+        };
+        AISpend: {
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            totalCostUsd: string;
+            /** Format: int64 */
+            totalCalls: number;
+            /** Format: int64 */
+            totalInputTokens?: number;
+            /** Format: int64 */
+            totalOutputTokens?: number;
+            /** Format: int64 */
+            totalCacheReadTokens?: number;
+            byProvider: components["schemas"]["AISpendGroup"][];
+            byProject: components["schemas"]["AISpendGroup"][];
+            byAgent: components["schemas"]["AISpendGroup"][];
+        };
+        /**
+         * @description What sort of requirement this is. Validation rules and edge cases are the
+         *     two that produce the most test cases, which is why they are separate kinds
+         *     rather than prose inside a feature.
+         * @enum {string}
+         */
+        RequirementKind: "feature" | "business_rule" | "validation_rule" | "auth" | "edge_case";
+        Requirement: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["RequirementKind"];
+            title: string;
+            body: string;
+            /** @description Where in the uploaded file this came from, as line:column or a character range. */
+            sourceRef: string;
+            /** Format: uuid */
+            endpointId?: string | null;
+            /** Format: uuid */
+            artifactId?: string | null;
+            /** @description The model that produced it, so output quality traces back to what produced it. */
+            generatedBy?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RequirementPage: {
+            items: components["schemas"]["Requirement"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        /**
+         * @description Requirement coverage only. Code coverage is a separate number and the two
+         *     are never merged (FR-7.2).
+         */
+        RequirementCoverage: {
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            covered: number;
+            /** @description Named rather than counted, so a user can act on it. */
+            uncovered: components["schemas"]["Requirement"][];
+        };
+        /** @description One parsed operation, as deterministic code normalized it. */
+        EndpointSummary: {
+            method: string;
+            path: string;
+            operationId?: string;
+            summary?: string;
+            description?: string;
+            parameterCount?: number;
+            responseCodes?: string[];
+            secured?: boolean;
+            sourceRef?: string;
+        };
+        EndpointList: {
+            items: components["schemas"]["EndpointSummary"][];
+        };
+        /** @enum {string} */
+        TestPriority: "critical" | "high" | "medium" | "low";
+        /** @enum {string} */
+        TestCategory: "functional" | "negative" | "boundary" | "security" | "auth" | "performance" | "data";
+        /**
+         * @description Rejected is terminal for a generated case: reviving one the team already
+         *     refused should be a deliberate new case rather than a status flip.
+         * @enum {string}
+         */
+        TestCaseStatus: "draft" | "approved" | "rejected";
+        TestStep: {
+            action: string;
+            data?: string;
+            expected?: string;
+        };
+        TestCase: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            /** Format: uuid */
+            requirementId?: string | null;
+            title: string;
+            preconditions?: string;
+            steps: components["schemas"]["TestStep"][];
+            expected?: string;
+            priority: components["schemas"]["TestPriority"];
+            category: components["schemas"]["TestCategory"];
+            status: components["schemas"]["TestCaseStatus"];
+            /**
+             * Format: uuid
+             * @description Set when this case was merged into another one.
+             */
+            supersededBy?: string | null;
+            /** @description Empty for a hand-written case. */
+            generatedBy?: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        TestCasePage: {
+            items: components["schemas"]["TestCase"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        CreateTestCaseRequest: {
+            title: string;
+            /** Format: uuid */
+            requirementId?: string;
+            preconditions?: string;
+            steps?: components["schemas"]["TestStep"][];
+            expected?: string;
+            priority?: components["schemas"]["TestPriority"];
+            category?: components["schemas"]["TestCategory"];
+            /** @description METHOD /path, so a hand-written case is fingerprinted like a generated one. */
+            endpoint?: string;
+            /** @description A short phrase naming what is checked. Defaults to the title. */
+            assertion?: string;
+        };
+        /** @description Omitted fields are left alone. */
+        UpdateTestCaseRequest: {
+            title?: string;
+            preconditions?: string;
+            steps?: components["schemas"]["TestStep"][];
+            expected?: string;
+            priority?: components["schemas"]["TestPriority"];
+            category?: components["schemas"]["TestCategory"];
+            status?: components["schemas"]["TestCaseStatus"];
+        };
+        BulkStatusRequest: {
+            ids: string[];
+            status: components["schemas"]["TestCaseStatus"];
+        };
+        /**
+         * @description A projection, not a quote. The assumptions are returned so it can be
+         *     audited: the same specification differs by roughly an order of magnitude
+         *     between a provider with prompt caching and one without.
+         */
+        GenerationEstimate: {
+            providerName: string;
+            modelName: string;
+            /** @enum {string} */
+            promptCaching: "explicit" | "automatic" | "none";
+            /** Format: int64 */
+            endpoints: number;
+            /** Format: int64 */
+            requirements: number;
+            /** Format: int64 */
+            calls: number;
+            /** Format: int64 */
+            prefixTokens?: number;
+            /** Format: int64 */
+            inputTokens?: number;
+            /** Format: int64 */
+            cachedTokens?: number;
+            /** Format: int64 */
+            outputTokens?: number;
+            costUsd: string;
+        };
+        /**
+         * @description What a file is written for. Supertest and Postman are delivered in this
+         *     phase; the rest are declared so the API and the UI agree about what exists,
+         *     and asking for one returns a reason rather than nothing.
+         * @enum {string}
+         */
+        TestFramework: "supertest" | "postman" | "jest" | "vitest" | "playwright" | "cypress" | "k6" | "pytest";
+        /** @description One generated file, without its content. */
+        TestFile: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            framework: components["schemas"]["TestFramework"];
+            /** @description Repository-relative and forward-slashed. Validated before storage. */
+            path: string;
+            /** @description The cases this file implements, which is what makes traceability work. */
+            testCaseIds: string[];
+            generatedBy?: string;
+            /**
+             * Format: date-time
+             * @description Null means static validation has not run yet, which is not the same as
+             *     having failed.
+             */
+            validatedAt?: string | null;
+            validationNote?: string;
+            sizeBytes: number;
+            /** Format: date-time */
+            generatedAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        TestFileContent: components["schemas"]["TestFile"] & {
+            /** @description Plain text. Highlighting is a frontend concern. */
+            content: string;
+        };
+        FileCoverage: {
+            path: string;
+            linesTotal: number;
+            linesCovered: number;
+            branchesTotal?: number;
+            branchesCovered?: number;
+            /**
+             * Format: double
+             * @description Null when the file has no executable lines. An interface or a type declaration is not a file with no coverage, and showing it as 0% would put it at the top of a list of things to fix when there is nothing to fix.
+             */
+            lineRate?: number | null;
+        };
+        CodeCoverage: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            /** @description The revision measured, so a rise or fall is attributable to a change. */
+            commit?: string;
+            /** @description Which coverage tool produced this. Always the repository's own. */
+            tool: string;
+            /** @description The exact command that ran, because a percentage means nothing without it. */
+            command: string;
+            linesTotal: number;
+            linesCovered: number;
+            branchesTotal?: number;
+            branchesCovered?: number;
+            /** Format: double */
+            lineRate?: number | null;
+            /**
+             * Format: double
+             * @description Null when the tool does not measure branches. Several do not, and zero would claim every conditional is untested.
+             */
+            branchRate?: number | null;
+            /** @description Per-file detail, least covered first. */
+            files?: components["schemas"]["FileCoverage"][];
+            /** Format: date-time */
+            measuredAt: string;
+        };
+        GenerateUnitTestsRequest: {
+            ref?: string;
+            /** @description Narrow generation to these files. Empty means every untested path the map found. */
+            targets?: string[];
+        };
+        MappedController: {
+            file: string;
+            name: string;
+            routes?: string[];
+            calls?: string[];
+        };
+        MappedComponent: {
+            file: string;
+            name: string;
+            responsibility?: string;
+        };
+        MappedDataStore: {
+            file: string;
+            name: string;
+            tables?: string[];
+        };
+        UncoveredPath: {
+            file: string;
+            symbol: string;
+            why?: string;
+        };
+        ExplorationStep: {
+            /** @description read, grep, or glob. */
+            action: string;
+            detail?: string;
+            reason?: string;
+            /** @description The platform refused this step, such as a path outside the checkout. */
+            refused?: boolean;
+        };
+        RepositoryMap: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            /** @description The revision this map describes. A map with no commit is one nobody can tell is stale. */
+            commit?: string;
+            stack?: string;
+            summary?: string;
+            controllers?: components["schemas"]["MappedController"][];
+            services?: components["schemas"]["MappedComponent"][];
+            dataAccess?: components["schemas"]["MappedDataStore"][];
+            /** @description Paths with no test, named as symbols. The percentage is the coverage tool's job. */
+            uncovered?: components["schemas"]["UncoveredPath"][];
+            /** @description What the exploration could not work out, including files it named that do not exist. */
+            unknowns?: string[];
+            /** @description What the agent read, in order. An exploration nobody can retrace is a conclusion nobody can check. */
+            trail?: components["schemas"]["ExplorationStep"][];
+            steps: number;
+            /** @description The step budget ran out, so the map covers less than the agent intended. */
+            cutShort: boolean;
+            modelName?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /**
+         * @description `git` is clone-by-URL and `archive` is an uploaded zip; both work with no
+         *     external platform configured. The rest are declared so the API and the UI
+         *     agree about what exists, and asking for one returns a reason rather than
+         *     nothing.
+         * @enum {string}
+         */
+        RepositoryProvider: "git" | "github" | "gitlab" | "bitbucket" | "archive";
+        DetectedStack: {
+            language?: string;
+            framework?: string;
+            packageManager?: string;
+            version?: string;
+            /** @description The repository's own test script where it defines one, rather than an assumption. */
+            testCommand?: string;
+            /** @description The repository's own coverage tool. The only thing permitted to produce a coverage number. */
+            coverageTool?: string;
+            /** @description False when nothing recognisable was found. The platform then says unknown and waits for an override. */
+            confident: boolean;
+            /** @description Every file detection read, in order. This is what makes an unknown result actionable. */
+            inspected: string[];
+            summary?: string;
+        };
+        RepositoryConnection: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            provider: components["schemas"]["RepositoryProvider"];
+            url: string;
+            defaultBranch?: string;
+            /** @description Whether a token is stored. The token itself is never returned. */
+            hasCredential: boolean;
+            /** @description The revision the last clone actually fetched, not the branch name. */
+            lastCommit?: string;
+            /** Format: date-time */
+            lastFetchedAt?: string | null;
+            /** @description Why the last clone failed, so a connection that looks fine but never works says so. */
+            lastError?: string;
+            detected?: components["schemas"]["DetectedStack"];
+            /** Format: date-time */
+            detectedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ConnectRepositoryRequest: {
+            provider?: components["schemas"]["RepositoryProvider"];
+            url: string;
+            defaultBranch?: string;
+            /** @description A read-only access token for a private repository. Stored as a project secret and never returned. Omit it to keep an existing token, or send an empty string to clear it. */
+            token?: string;
+        };
+        DiscoverUIFlowsRequest: {
+            /**
+             * @description Explore this URL instead of the project's configured target. Checked
+             *     against the same allowlist, because an override is exactly the input that
+             *     must not be trusted.
+             */
+            targetUrl?: string;
+        };
+        GenerateUITestsRequest: {
+            /**
+             * Format: uuid
+             * @description Generate from this graph rather than the newest one. A reviewer who approved a graph meant that graph.
+             */
+            flowId?: string;
+            /** @description Only these journeys, by name. Absent means every flow in the graph. */
+            flows?: string[];
+        };
+        UIFlowGraph: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            /** @description What was explored. A graph with no target is one nobody can tell is stale. */
+            target: string;
+            /**
+             * @description How the discovery signed in. Without this, a graph with no authenticated
+             *     pages cannot be told apart from one that never logged in.
+             */
+            authMode: string;
+            summary?: string;
+            pages?: components["schemas"]["UIPage"][];
+            /** @description Journeys worth a test, each one the agent actually walked. */
+            flows?: components["schemas"]["UIFlow"][];
+            /** @description Seen in a link and never opened, or recorded without being walked and therefore dropped. */
+            unreachable?: string[];
+            /** @description What the discovery could not determine, so the graph is honest about its edges. */
+            unknowns?: string[];
+            /** @description Every action and where it landed, in order. A discovery nobody can retrace is a graph nobody can check. */
+            trail?: components["schemas"]["UIDiscoveryStep"][];
+            /** @description The video, trace, and screenshots the discovery recorded, with time-limited URLs. */
+            artifacts?: components["schemas"]["UIArtifact"][];
+            steps: number;
+            /** @description The action budget ran out, so the graph covers less than the agent intended. */
+            cutShort: boolean;
+            pageCount?: number;
+            flowCount?: number;
+            /** Format: date-time */
+            reviewedAt?: string | null;
+            modelName?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        UIFlowGraphSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            target: string;
+            authMode: string;
+            pageCount: number;
+            flowCount: number;
+            steps: number;
+            cutShort: boolean;
+            /** Format: date-time */
+            reviewedAt?: string | null;
+            modelName?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        UIFlowGraphList: {
+            items: components["schemas"]["UIFlowGraphSummary"][];
+        };
+        UIPage: {
+            path: string;
+            title?: string;
+            purpose?: string;
+            requiresAuth: boolean;
+            actions?: components["schemas"]["UIPageAction"][];
+        };
+        /**
+         * @description One thing a user can do, named the way the selector policy prefers — a test id,
+         *     then a role with its accessible name, then a label — so a spec can be written
+         *     from it without inventing a locator.
+         */
+        UIPageAction: {
+            description: string;
+            testid?: string;
+            role?: string;
+            name?: string;
+            label?: string;
+            leadsTo?: string;
+        };
+        UIFlow: {
+            name: string;
+            purpose?: string;
+            requiresAuth: boolean;
+            steps?: components["schemas"]["UIFlowStep"][];
+        };
+        UIFlowStep: {
+            action: string;
+            target?: string;
+            testid?: string;
+            role?: string;
+            name?: string;
+            label?: string;
+            /** @description A credential is never here. The placeholders $QAVIA_USERNAME and $QAVIA_PASSWORD stand in for one, and the browser substitutes them. */
+            value?: string;
+            /** @description What should be true afterwards. A step with nothing to assert passes when the page is blank. */
+            expect?: string;
+        };
+        UIDiscoveryStep: {
+            action: string;
+            detail?: string;
+            reason?: string;
+            url?: string;
+            /** @description The platform refused this action, such as one that looked destructive or led off the target. */
+            refused?: boolean;
+        };
+        UIArtifact: {
+            name: string;
+            /** Format: int64 */
+            bytes: number;
+            contentType?: string;
+            /**
+             * @description A time-limited URL. Absent when the storage driver cannot sign one, in
+             *     which case the object is fetched through the platform instead.
+             */
+            url?: string;
+        };
+        SyncRepositoryRequest: {
+            /** @description A branch or tag to fetch instead of the connection's default. */
+            ref?: string;
+        };
+        /** @enum {string} */
+        ReportFormat: "html" | "pdf";
+        /** @enum {string} */
+        ReportStatus: "queued" | "running" | "ready" | "failed";
+        Report: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            format: components["schemas"]["ReportFormat"];
+            status: components["schemas"]["ReportStatus"];
+            /** @description How far back this report looks, so two reports of one project are distinguishable by content. */
+            windowDays: number;
+            /** Format: int64 */
+            sizeBytes?: number;
+            /** @description Why generation failed, in words a user can act on. Empty otherwise. */
+            error?: string;
+            /** Format: uuid */
+            jobId?: string | null;
+            /** Format: uuid */
+            requestedBy?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            finishedAt?: string | null;
+        };
+        ReportPage: {
+            items: components["schemas"]["Report"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        ReportRequest: {
+            format?: components["schemas"]["ReportFormat"];
+            /** @default 30 */
+            days: number;
+        };
+        /**
+         * @description What a citation points at. Every reference is checked against the artifact it
+         *     names before the analysis is stored, so a `log` reference to a line the log
+         *     does not have never reaches a client.
+         * @enum {string}
+         */
+        EvidenceKind: "log" | "response" | "source" | "history";
+        EvidenceReference: {
+            kind: components["schemas"]["EvidenceKind"];
+            /** @description What this reference shows. The label on a link, not the explanation. */
+            detail: string;
+            /** @description Set for source references, and for log references that name a file. */
+            file?: string;
+            fromLine?: number;
+            toLine?: number;
+            /** @description Dotted field path for a response reference, such as data.items[0].id. */
+            path?: string;
+            /** @description The text the analysis claims is there. Compared against the cited lines. */
+            quote?: string;
+        };
+        Analysis: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            runResultId: string;
+            /** @description One line, for a list. */
+            reason: string;
+            rootCause: string;
+            /** @description Advice, never applied. Nothing in this platform writes to a repository. */
+            suggestedFix?: string;
+            evidence: components["schemas"]["EvidenceReference"][];
+            relatedCommit?: string;
+            /**
+             * Format: double
+             * @description How consistently this test behaves, from 0 to 1, computed from its own
+             *     results: the proportion of recent runs that passed, reduced by how often
+             *     the result changed, and capped when a retry inside one run flipped it.
+             *
+             *     Null when the platform has no repeat history to measure. Null means "not
+             *     measurable", never zero, and it is never a number a model reported about
+             *     itself.
+             */
+            stabilityScore?: number | null;
+            /** @description Which signals produced the score, or why there is none. */
+            stabilityBasis?: string;
+            promptVersion?: string;
+            modelName?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AnalysisList: {
+            items: components["schemas"]["Analysis"][];
+        };
+        FeedbackRequest: {
+            helpful: boolean;
+            note?: string;
+        };
+        PromptFeedback: {
+            promptVersion: string;
+            helpful: number;
+            unhelpful: number;
+        };
+        PromptFeedbackList: {
+            items: components["schemas"]["PromptFeedback"][];
+        };
+        /** @enum {string} */
+        DefectSeverity: "critical" | "high" | "medium" | "low";
+        /**
+         * @description `duplicate` is a status and a link: a duplicate that is only a link disappears
+         *     from every status filter, and a status with no link leaves a defect nobody can
+         *     navigate away from. Set it by linking, not by assignment.
+         * @enum {string}
+         */
+        DefectStatus: "open" | "acknowledged" | "in_progress" | "fixed" | "wont_fix" | "duplicate";
+        Defect: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            /** Format: uuid */
+            runResultId?: string | null;
+            /** Format: uuid */
+            testCaseId?: string | null;
+            /** Format: uuid */
+            requirementId?: string | null;
+            /** Format: uuid */
+            analysisId?: string | null;
+            title: string;
+            description?: string;
+            severity: components["schemas"]["DefectSeverity"];
+            status: components["schemas"]["DefectStatus"];
+            /** Format: uuid */
+            assigneeId?: string | null;
+            /** Format: uuid */
+            duplicateOf?: string | null;
+            /** @description Where this defect lives in an external tracker. Empty with no integration configured. */
+            externalRef?: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            createdBy?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            resolvedAt?: string | null;
+        };
+        DefectDetail: {
+            defect: components["schemas"]["Defect"];
+            /** @description The defects linked to this one as duplicates: the same failure recurring. */
+            occurrences: components["schemas"]["Defect"][];
+        };
+        DefectPage: {
+            items: components["schemas"]["Defect"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+            /** @description The project's defects by status, so a summary strip needs no second request. */
+            counts?: {
+                [key: string]: number;
+            };
+        };
+        CreateDefectRequest: {
+            title: string;
+            description?: string;
+            severity?: components["schemas"]["DefectSeverity"];
+            /** Format: uuid */
+            assigneeId?: string;
+            /** Format: uuid */
+            testCaseId?: string;
+            /** Format: uuid */
+            requirementId?: string;
+        };
+        /** @description A partial edit. An absent field is left alone. */
+        UpdateDefectRequest: {
+            title?: string;
+            description?: string;
+            severity?: components["schemas"]["DefectSeverity"];
+            status?: components["schemas"]["DefectStatus"];
+            /**
+             * Format: uuid
+             * @description Reassigns the defect. Absent leaves the assignee alone.
+             */
+            assigneeId?: string;
+            /** @description Unassigns the defect. A separate flag rather than a null assigneeId, because absent and null are the same value on the wire once a client omits a field, and "leave it alone" and "clear it" must not be. */
+            clearAssignee?: boolean;
+        };
+        LinkDuplicateRequest: {
+            /**
+             * Format: uuid
+             * @description The original this defect duplicates. Omit it to unlink, which is unambiguous here because unlinking is the only other thing this endpoint does.
+             */
+            duplicateOf?: string;
+        };
+        PromoteRequest: {
+            severity?: components["schemas"]["DefectSeverity"];
+            /** Format: uuid */
+            assigneeId?: string;
+        };
+        DefectComment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            defectId: string;
+            /**
+             * Format: uuid
+             * @description Null for a comment the platform wrote, such as a duplicate link.
+             */
+            authorId?: string | null;
+            body: string;
+            system: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        DefectCommentPage: {
+            items: components["schemas"]["DefectComment"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        CommentRequest: {
+            body: string;
+        };
+        /**
+         * @description `queued` and `running` are in flight. `passed` and `failed` are outcomes of a
+         *     suite that ran. `error` means the suite could not run, which is a different
+         *     thing from failing, and `cancelled` means somebody stopped it.
+         * @enum {string}
+         */
+        RunStatus: "queued" | "running" | "passed" | "failed" | "errored" | "cancelled";
+        /**
+         * @description `flaky` is its own status rather than a pass or a failure: a test whose
+         *     result changed across attempts is reporting something about itself, not
+         *     about the code under test (F-7.11).
+         * @enum {string}
+         */
+        RunResultStatus: "passed" | "failed" | "flaky" | "skipped" | "errored";
+        /** @enum {string} */
+        RunTrigger: "manual" | "webhook" | "schedule" | "api";
+        Run: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            /**
+             * Format: uuid
+             * @description The chain executing this run, for progress and cancellation.
+             */
+            jobId?: string | null;
+            /** @description Where this run executed, recorded on the row for after-the-fact attribution. */
+            targetUrl: string;
+            trigger: components["schemas"]["RunTrigger"];
+            status: components["schemas"]["RunStatus"];
+            framework: components["schemas"]["TestFramework"];
+            /**
+             * @description The runner image that executed, by digest. A tag would mean this run
+             *     cannot say what produced its results.
+             */
+            image: string;
+            kind?: components["schemas"]["RunKind"];
+            total: number;
+            passed: number;
+            failed: number;
+            flaky: number;
+            skipped: number;
+            /** @description Tests the project excused. Counted separately from passed, because a suite where six tests are excused is not a suite where they all pass. */
+            quarantined?: number;
+            durationMs?: number;
+            /** @description Why the suite could not run. Empty for a run that ran, whatever its results. */
+            error?: string;
+            /** @description Whether the full log was stored. False means the run produced no output worth keeping. */
+            hasLog?: boolean;
+            /** Format: uuid */
+            triggeredBy?: string | null;
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            finishedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RunPage: {
+            items: components["schemas"]["Run"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+        };
+        TriggerRunRequest: {
+            framework?: components["schemas"]["TestFramework"];
+            /**
+             * @description Overrides the project's configured target for this run. Checked against
+             *     the allowlist exactly like the configured one, because an override is
+             *     the input least worth trusting.
+             */
+            targetUrl?: string;
+        };
+        RunResult: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            runId: string;
+            /**
+             * Format: uuid
+             * @description Null when the platform could not map this result to exactly one case. A
+             *     wrong mapping is worse than none: it would put a passing result on a
+             *     case that never ran.
+             */
+            testCaseId?: string | null;
+            /** Format: uuid */
+            testFileId?: string | null;
+            name: string;
+            status: components["schemas"]["RunResultStatus"];
+            durationMs?: number;
+            /** @description 1 for the first run of a test, incrementing per retry. */
+            attempt: number;
+            /** @description The project excuses this test, so its failure did not fail the run. The status still says what actually happened. */
+            quarantined?: boolean;
+            failureMessage?: string;
+            artifacts?: components["schemas"]["RunResultArtifacts"];
+        };
+        DumpColumn: {
+            name: string;
+            /** @description The declared SQL type without its length, lowercased. */
+            type: string;
+            /** @description The character limit where the type declared one, so a generated value fits the column. */
+            length?: number;
+            notNull: boolean;
+            primaryKey?: boolean;
+            /** @description The value list from a check constraint, which is how a dump usually expresses an enumeration. */
+            enum?: string[];
+        };
+        DumpTable: {
+            name: string;
+            columns: components["schemas"]["DumpColumn"][];
+        };
+        DumpTableList: {
+            items: components["schemas"]["DumpTable"][];
+            /** @description What the parse could not read, named rather than silently skipped. */
+            warnings?: string[];
+        };
+        /** @description What a real staging environment cannot be made to do on demand. The pattern is seeded, so the same share of failures falls in the same places on every run. */
+        MockFaults: {
+            /** @description Delay on every response, for exercising a client's timeout handling. */
+            delayMs?: number;
+            /**
+             * Format: double
+             * @description Share of requests answered with a failure status.
+             */
+            failureRate?: number;
+            /** @description Which failures to choose from. Empty means 500. */
+            statusCodes?: number[];
+            /**
+             * Format: double
+             * @description Share of requests that get no answer at all. A different failure from a 504, and the one that finds a missing timeout in a client.
+             */
+            timeoutRate?: number;
+            /** Format: int64 */
+            seed?: number;
+        };
+        StartMockServerRequest: {
+            faults?: components["schemas"]["MockFaults"];
+            /**
+             * @description Response bodies generated per endpoint, rotated in order. More than one so a client listing twice does not see byte-identical data.
+             * @default 3
+             */
+            samples: number;
+            /**
+             * Format: int64
+             * @description Makes the generated bodies reproducible, so a test written against the mock keeps passing for the right reason.
+             */
+            seed?: number;
+        };
+        /** @enum {string} */
+        MockServerStatus: "stopped" | "running" | "failed";
+        MockServer: {
+            /** Format: uuid */
+            projectId: string;
+            status: components["schemas"]["MockServerStatus"];
+            /** @description Where a client application points. Empty when nothing is running. */
+            url?: string;
+            routeCount: number;
+            faults?: components["schemas"]["MockFaults"];
+            image?: string;
+            /** @description Why a start failed. A button that did nothing and a start that failed are different things. */
+            error?: string;
+            uptimeSeconds?: number;
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            stoppedAt?: string | null;
+        };
+        /**
+         * @description Absent returns the JSON envelope with the seed; a value streams the export.
+         * @enum {string}
+         */
+        TestDataFormat: "json" | "csv" | "sql";
+        /** @description Where the shape comes from: an endpoint of the project's specification, or a table of an uploaded SQL dump. Exactly one is needed. */
+        TestDataSource: {
+            /**
+             * Format: uuid
+             * @description An uploaded `sql_dump` artifact. Parsed locally: no database credential and no MCP server are involved, which is why this path works on a fresh install.
+             */
+            dumpArtifactId?: string;
+            /** @description Which table of the dump. Optional when the dump declares exactly one. */
+            table?: string;
+            /** @description "METHOD /path" from this project's specification. The request body's schema is used, or the success response's when there is no body. */
+            endpoint?: string;
+            /** @description Generate from this response's schema instead of the request's, for seeding a fixture or a mock. */
+            response?: string;
+        };
+        GenerateTestDataRequest: {
+            source: components["schemas"]["TestDataSource"];
+            /** @default 10 */
+            count: number;
+            /**
+             * Format: int64
+             * @description Reproduces an earlier set exactly. Omit to be given one, which the response reports so the same data can be asked for again.
+             */
+            seed?: number;
+            /** @description Shapes the values that have a country, such as an address or a phone number. */
+            locale?: string;
+            /** @description Fields to fill with an AI pass. Opt-in per field: the bulk is a seeded faker, and anything the model does not answer keeps the generated value. */
+            fields?: string[];
+            format?: components["schemas"]["TestDataFormat"];
+            /** @description Table name for SQL output. Filtered to a safe identifier, not merely quoted. */
+            table?: string;
+        };
+        GenerateInvalidTestDataRequest: {
+            source: components["schemas"]["TestDataSource"];
+            /** @description Which families of violation. Absent means every kind the schema supports. */
+            kinds?: components["schemas"]["InvalidDataKind"][];
+            /** @default 50 */
+            limit: number;
+            /** Format: int64 */
+            seed?: number;
+            locale?: string;
+        };
+        /** @enum {string} */
+        InvalidDataKind: "missing" | "empty" | "type" | "too_long" | "too_short" | "too_large" | "too_small" | "enum" | "format" | "pattern" | "injection" | "declined_card";
+        TestDataSet: {
+            /**
+             * Format: int64
+             * @description The seed that produced this set. The same seed and count reproduce it exactly.
+             */
+            seed: number;
+            records: {
+                [key: string]: unknown;
+            }[];
+            /** @description Schemas the walk could not do much with, and what the AI pass did or did not fill. */
+            warnings?: string[];
+        };
+        InvalidTestDataRecord: {
+            field: string;
+            kind: components["schemas"]["InvalidDataKind"];
+            /** @description The constraint this record breaks, in words. */
+            violates?: string;
+            /** @description What the endpoint should do about it. This is the assertion somebody writes from the record. */
+            expectation?: string;
+            record: {
+                [key: string]: unknown;
+            };
+        };
+        InvalidTestDataSet: {
+            /** Format: int64 */
+            seed: number;
+            records: components["schemas"]["InvalidTestDataRecord"][];
+            /** @description Fields that produced no case, so an unconstrained field is distinguishable from one the generator ignored. */
+            skipped?: string[];
+        };
+        TestDataShape: {
+            endpoint: string;
+            summary?: string;
+            hasRequest: boolean;
+            responses?: string[];
+            fields?: string[];
+        };
+        TestDataShapeList: {
+            items: components["schemas"]["TestDataShape"][];
+        };
+        Quarantine: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            testName: string;
+            /** Format: uuid */
+            testCaseId?: string;
+            /** @description The sentence a person reads, with the arithmetic that produced it. */
+            reason?: string;
+            flakeCount?: number;
+            windowRuns?: number;
+            /** @enum {string} */
+            source: "auto" | "manual";
+            /**
+             * Format: uuid
+             * @description Who is answerable. Absent on an automatic quarantine nobody has claimed.
+             */
+            ownerId?: string;
+            /** @description How long it has stood. A fortnight is a decision; a year is an abandonment. */
+            ageHours: number;
+            /** @description Older than the configured review age. Surfaced, never released automatically. */
+            stale: boolean;
+            active: boolean;
+            /** Format: date-time */
+            lastFlakedAt?: string | null;
+            /** Format: date-time */
+            releasedAt?: string | null;
+            releaseNote?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        QuarantineList: {
+            items: components["schemas"]["Quarantine"][];
+        };
+        QuarantineRequest: {
+            testName: string;
+            reason?: string;
+        };
+        QuarantineOwnerRequest: {
+            /** Format: uuid */
+            ownerId: string;
+        };
+        QuarantineReleaseRequest: {
+            /** @description What changed, so the next person reading the history knows why it ended. */
+            note?: string;
+        };
+        Integration: {
+            /** @description The registry it belongs to — notifier, defecttracker, sourceprovider, runtrigger, objectstore. */
+            capability: string;
+            id: string;
+            /** @description The always-on fallback each capability registers first. */
+            builtin: boolean;
+            /** @enum {string} */
+            state: "builtin" | "active" | "not_configured";
+        };
+        IntegrationList: {
+            items: components["schemas"]["Integration"][];
+        };
+        /** @enum {string} */
+        MCPTransport: "stdio" | "http";
+        /** @enum {string} */
+        MCPScope: "global" | "project";
+        MCPServerTool: {
+            name: string;
+            description?: string;
+            /** @description The tool changes state. Write tools are governed by the write-safety rules. */
+            write?: boolean;
+        };
+        MCPServerRequest: {
+            name: string;
+            transport: components["schemas"]["MCPTransport"];
+            /** @description For stdio. */
+            command?: string;
+            args?: string[];
+            /** @description For http. */
+            url?: string;
+            scope: components["schemas"]["MCPScope"];
+            /**
+             * Format: uuid
+             * @description Required for a project-scoped server; the boundary that keeps it off other projects.
+             */
+            projectId?: string;
+            /** @description A token or OAuth material. Encrypted at rest and never returned; omit on update to keep it. */
+            credential?: string;
+            /** @description The allowlist. Deny-all — a tool not here is refused. Update only; a new server starts empty. */
+            enabledTools?: string[];
+            /** @description Permit writes without a per-call confirmation. Off by default. */
+            autoWrite?: boolean;
+            isEnabled?: boolean;
+        };
+        MCPServer: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            transport: components["schemas"]["MCPTransport"];
+            command?: string;
+            args?: string[];
+            url?: string;
+            scope: components["schemas"]["MCPScope"];
+            /** Format: uuid */
+            projectId?: string | null;
+            enabledTools: string[];
+            /** @description What the last connection test found, so the allowlist screen shows what is available. */
+            discoveredTools?: components["schemas"]["MCPServerTool"][];
+            autoWrite?: boolean;
+            isEnabled: boolean;
+            hasCredential?: boolean;
+            /** @enum {string} */
+            healthStatus: "unknown" | "healthy" | "unreachable";
+            healthDetail?: string;
+            /** Format: date-time */
+            healthCheckedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        MCPServerList: {
+            items: components["schemas"]["MCPServer"][];
+        };
+        MCPCall: {
+            /** Format: int64 */
+            id: number;
+            /** Format: uuid */
+            serverId?: string | null;
+            serverName?: string;
+            tool: string;
+            /** @description The call's arguments, with credential-shaped values redacted. */
+            arguments?: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            status: "ok" | "error" | "denied";
+            error?: string;
+            agent?: string;
+            /** Format: uuid */
+            projectId?: string | null;
+            /** Format: uuid */
+            jobId?: string | null;
+            /** Format: date-time */
+            at: string;
+        };
+        MCPCallList: {
+            items: components["schemas"]["MCPCall"][];
+        };
+        /** @enum {string} */
+        RunKind: "functional" | "performance" | "security";
+        /** @description The authorised load. It says how hard to hit the target, and it is the caller's decision. */
+        LoadProfile: {
+            /** @description Peak concurrency, reached at the end of the ramp. */
+            virtualUsers: number;
+            /** @default 0 */
+            rampUpSeconds: number;
+            /** @description How long to sustain peak, which is where the steady-state percentiles come from. */
+            holdSeconds: number;
+            /**
+             * @description Becomes a k6 threshold, so the run has a stated pass condition.
+             * @default 500
+             */
+            p95TargetMs: number;
+            /**
+             * Format: double
+             * @default 0.01
+             */
+            maxErrorRate: number;
+        };
+        StartPerformanceRequest: {
+            profile: components["schemas"]["LoadProfile"];
+            /** @description Override the project's configured target. Checked against the allowlist like any other. */
+            targetUrl?: string;
+            /** @description The exact host, to authorise the first run against a new one. */
+            confirmHost?: string;
+        };
+        PerformanceMetrics: {
+            /** Format: uuid */
+            runId: string;
+            /** Format: int64 */
+            requests: number;
+            /**
+             * Format: double
+             * @description Requests per second over the run.
+             */
+            throughput: number;
+            /** Format: double */
+            errorRate: number;
+            /** Format: double */
+            latencyAvgMs?: number;
+            /** Format: double */
+            latencyP50Ms?: number;
+            /** Format: double */
+            latencyP90Ms?: number;
+            /** Format: double */
+            latencyP95Ms?: number;
+            /** Format: double */
+            latencyP99Ms?: number;
+            /** Format: double */
+            latencyMaxMs?: number;
+            virtualUsers?: number;
+            /** Format: int64 */
+            durationMs?: number;
+        };
+        StartSecurityScanRequest: {
+            /** @description Which weakness classes to probe. Absent means all seven. */
+            categories?: ("sqli" | "xss" | "csrf" | "jwt" | "idor" | "rate_limit" | "broken_auth")[];
+            targetUrl?: string;
+            confirmHost?: string;
+        };
+        SecurityFinding: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: uuid
+             * @description The result row the probe produced, through which the finding is promoted to a defect.
+             */
+            runResultId: string;
+            /** @description The reviewed library entry this came from. Always a real payload a person approved. */
+            payloadId: string;
+            category: string;
+            endpoint: string;
+            parameter?: string;
+            /** @enum {string} */
+            severity: "critical" | "high" | "medium" | "low" | "info";
+            /** @description What the detection rule matched — the reflection, the database error, the unexpected 2xx. */
+            evidence?: string;
+            /** @description A request a person can replay to confirm it, with the credential redacted. */
+            reproduction?: string;
+        };
+        SecurityFindingList: {
+            items: components["schemas"]["SecurityFinding"][];
+        };
+        /** @enum {string} */
+        RunArtifactKind: "log" | "screenshot" | "video" | "trace";
+        RunArtifact: {
+            /** Format: uuid */
+            resultId: string;
+            testName: string;
+            /** @description Which attempt produced it, so a flaky test's evidence is separable run by run. */
+            attempt: number;
+            kind: components["schemas"]["RunArtifactKind"];
+            contentType?: string;
+            /** @description A time-limited URL, when the configured storage can sign one. Absent otherwise, and downloadPath still works. */
+            url?: string;
+            /** @description The platform path that streams this file. */
+            downloadPath: string;
+        };
+        RunArtifactList: {
+            items: components["schemas"]["RunArtifact"][];
+        };
+        /** @description What this result left behind. A key is present only when the run produced one. */
+        RunResultArtifacts: {
+            hasLog?: boolean;
+            hasScreenshot?: boolean;
+            hasVideo?: boolean;
+            /** @description A Playwright trace, the step-by-step record of what the page did. */
+            hasTrace?: boolean;
+        };
+        RunResultPage: {
+            items: components["schemas"]["RunResult"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+            /** @description The whole run's tally by status, so a summary strip needs no second request. */
+            counts?: {
+                [key: string]: number;
+            };
+        };
+        RunCommand: {
+            /** Format: int64 */
+            id: number;
+            /** @description Already redacted. A credential passed to the suite never appears here. */
+            command: string;
+            /** @description Null while the command is still running. */
+            exitCode?: number | null;
+            durationMs?: number;
+            outputExcerpt?: string;
+            /** Format: date-time */
+            at: string;
+        };
+        RunCommandList: {
+            items: components["schemas"]["RunCommand"][];
+        };
+        RunTrendPoint: {
+            /** Format: uuid */
+            runId: string;
+            /** Format: date-time */
+            at: string;
+            status: components["schemas"]["RunStatus"];
+            total: number;
+            passed: number;
+            failed: number;
+            flaky: number;
+            skipped: number;
+            durationMs?: number;
+            /**
+             * Format: double
+             * @description Passed over executed, where executed excludes skipped tests and counts a
+             *     flaky test as neither passed nor failed.
+             */
+            passRate: number;
+        };
+        RunTrend: {
+            items: components["schemas"]["RunTrendPoint"][];
+        };
+        ProjectDashboard: {
+            requirements: number;
+            testCases: number;
+            approvedCases: number;
+            testFiles: number;
+            runs: number;
+            /**
+             * @description Tests passed in the most recent finished run, not a lifetime total: a
+             *     dashboard answers where the project stands now.
+             */
+            passed: number;
+            failed: number;
+            flaky: number;
+        };
+        CaseHistoryEntry: {
+            /** Format: uuid */
+            runId: string;
+            status: components["schemas"]["RunResultStatus"];
+            durationMs?: number;
+            attempt: number;
+            /** Format: date-time */
+            at: string;
+        };
+        CaseHistory: {
+            items: components["schemas"]["CaseHistoryEntry"][];
+        };
+        TestFilePage: {
+            items: components["schemas"]["TestFile"][];
+            nextCursor?: components["schemas"]["NextCursor"];
+            /** @description File and byte counts per framework, so a browser can show totals without paging. */
+            summary?: components["schemas"]["TestFileSummary"][];
+        };
+        TestFileSummary: {
+            framework: components["schemas"]["TestFramework"];
+            /** Format: int64 */
+            files: number;
+            /** Format: int64 */
+            bytes: number;
+        };
+        TestFileList: {
+            items: components["schemas"]["TestFile"][];
         };
     };
     responses: {
@@ -564,6 +4957,24 @@ export interface components {
             };
         };
         /**
+         * @description A dependency is up but not answering usefully. The work is retried rather
+         *     than lost, and the message says which dependency.
+         */
+        ServiceUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "code": "service_degraded",
+                 *       "message": "AI service is not reachable right now. The work will be retried."
+                 *     }
+                 */
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /**
          * @description An unexpected failure. Carries an incident ID and nothing else; the cause
          *     is in the structured log against that ID.
          */
@@ -589,6 +5000,21 @@ export interface components {
         /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
         Cursor: string;
         UserID: string;
+        ProjectID: string;
+        ArtifactID: string;
+        JobID: string;
+        ProviderID: string;
+        ModelID: string;
+        ServerID: string;
+        QuarantineID: string;
+        FlowID: string;
+        ReportID: string;
+        ResultID: string;
+        AnalysisID: string;
+        DefectID: string;
+        RunID: string;
+        TestCaseID: string;
+        TestFileID: string;
         /**
          * @description Supported on every mutating endpoint a CI system or webhook can retry.
          *     Replaying the same key with the same body returns the original result;
@@ -1108,6 +5534,4497 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getSettingsRegistry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every setting the caller may see. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsRegistry"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getSettings: {
+        parameters: {
+            query?: {
+                /** @description Resolve project-scoped values for this project. */
+                projectID?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resolved values. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingValues"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateSettings: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Supported on every mutating endpoint a CI system or webhook can retry.
+                 *     Replaying the same key with the same body returns the original result;
+                 *     reusing it with a different body is a conflict.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "changes": [
+                 *         {
+                 *           "key": "runner.timeout_seconds",
+                 *           "scope": "global",
+                 *           "value": 900
+                 *         },
+                 *         {
+                 *           "key": "preferences.theme",
+                 *           "scope": "user",
+                 *           "value": "dark"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["UpdateSettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description Applied. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingValues"];
+                };
+            };
+            /** @description A value failed its declared validation, or the key is unknown. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "setting_invalid_value",
+                     *       "message": "Must be between 30 and 3600.",
+                     *       "details": {
+                     *         "key": "runner.timeout_seconds"
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description The caller's role is below the setting's minimum. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "setting_role_too_low",
+                     *       "message": "Changing \"storage.provider\" requires the Admin role.",
+                     *       "details": {
+                     *         "key": "storage.provider",
+                     *         "requiredRole": "Admin"
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    clearSetting: {
+        parameters: {
+            query: {
+                scope: components["schemas"]["SettingScope"];
+                /** @description Required when clearing a project-scoped value. */
+                projectID?: string;
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cleared, or there was no override to clear. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getSetupStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The current setup state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupStatus"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createFirstAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "email": "max@hyscaler.com",
+                 *       "name": "Max",
+                 *       "password": "correct-horse-battery-staple"
+                 *     }
+                 */
+                "application/json": components["schemas"]["CreateAdminRequest"];
+            };
+        };
+        responses: {
+            /** @description Admin created and signed in. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            /** @description Setup is already complete. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "setup_already_complete",
+                     *       "message": "Setup is already complete."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listProjects: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Archived projects are hidden by default. They stay readable, and read-only. */
+                includeArchived?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of projects. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createProject: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Supported on every mutating endpoint a CI system or webhook can retry.
+                 *     Replaying the same key with the same body returns the original result;
+                 *     reusing it with a different body is a conflict.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "name": "QuickDesk",
+                 *       "description": "Support desk API",
+                 *       "testTypes": [
+                 *         "test_cases",
+                 *         "api_tests"
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["CreateProjectRequest"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProjectRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    archiveProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archived, or already archived. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unarchiveProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Restored, or never archived. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    setExternalAIApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    approved: boolean;
+                    /** @description Recorded in the audit row, for example the contract reference. */
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listProjectMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every member, plus the owner. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMemberList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    addProjectMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+                userID: components["parameters"]["UserID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    role: components["schemas"]["Role"];
+                };
+            };
+        };
+        responses: {
+            /** @description Added or updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMember"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    removeProjectMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+                userID: components["parameters"]["UserID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed, or was not a member. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listArtifacts: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                kind?: components["schemas"]["ArtifactKind"];
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of artifacts, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtifactPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    uploadArtifact: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Supported on every mutating endpoint a CI system or webhook can retry.
+                 *     Replaying the same key with the same body returns the original result;
+                 *     reusing it with a different body is a conflict.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    kind: components["schemas"]["ArtifactKind"];
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Stored. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Artifact"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            /** @description Larger than the configured upload limit. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "upload_too_large",
+                     *       "message": "That file is larger than the 50 MB upload limit.",
+                     *       "details": {
+                     *         "limitBytes": 52428800
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The sniffed content type is not on the allowlist. */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "unsupported_media_type",
+                     *       "message": "Files of type \"application/x-msdownload\" are not accepted."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artifactID: components["parameters"]["ArtifactID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The artifact. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Artifact"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artifactID: components["parameters"]["ArtifactID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listArtifactVersions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artifactID: components["parameters"]["ArtifactID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versions, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Artifact"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    downloadArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artifactID: components["parameters"]["ArtifactID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description A signed URL at the object store. */
+            302: {
+                headers: {
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listJobs: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of jobs, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    submitJob: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Supported on every mutating endpoint a CI system or webhook can retry.
+                 *     Replaying the same key with the same body returns the original result;
+                 *     reusing it with a different body is a conflict.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "chain": "noop"
+                 *     }
+                 */
+                "application/json": components["schemas"]["SubmitJobRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted. Subscribe to the job rather than waiting. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobID: components["parameters"]["JobID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    cancelJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobID: components["parameters"]["JobID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancellation requested. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Already finished. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "job_not_cancelable",
+                     *       "message": "This job is succeeded and can no longer be cancelled."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    streamJobEvents: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The id of the last event received. Sent automatically by an EventSource on reconnect. */
+                "Last-Event-ID"?: string;
+            };
+            path: {
+                jobID: components["parameters"]["JobID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description An event stream of `status` and `event` messages. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listNotifications: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                unreadOnly?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of notifications, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getUnreadNotificationCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description How many are unread. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        unread: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    markAllNotificationsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description How many were marked. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        updated: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    markNotificationRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notificationID: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Marked, or already read. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listAuditEntries: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Exact action name, for example setting_changed. */
+                action?: string;
+                actorID?: string;
+                projectID?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of audit entries, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditEntryPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    triggerWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Hex-encoded HMAC-SHA256 of the raw body, prefixed with sha256=. */
+                "X-Qavia-Signature": string;
+                /** @description Unix seconds. A request outside the tolerance window is refused. */
+                "X-Qavia-Timestamp": string;
+            };
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "chain": "noop",
+                 *       "reference": "refs/heads/main"
+                 *     }
+                 */
+                "application/json": components["schemas"]["WebhookTriggerRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            /** @description The signature is missing, wrong, stale, or replayed. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "webhook_signature_invalid",
+                     *       "message": "The webhook signature is not valid for this body."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listAIProviders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every provider, default first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIProviderList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createAIProvider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "name": "Local Qwen",
+                 *       "kind": "openai-compatible",
+                 *       "dataResidency": "local",
+                 *       "credentials": {
+                 *         "base_url": "http://localhost:11434/v1"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["CreateAIProviderRequest"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIProvider"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getAIProvider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                providerID: components["parameters"]["ProviderID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The provider. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIProvider"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateAIProvider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                providerID: components["parameters"]["ProviderID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAIProviderRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIProvider"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteAIProvider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                providerID: components["parameters"]["ProviderID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description A tier assignment still uses it. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "ai_provider_in_use",
+                     *       "message": "This is used by 2 tier assignment(s). Reassign those tiers first."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    testAIProvider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                providerID: components["parameters"]["ProviderID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: uuid
+                     * @description Which model to probe. Defaults to the first enabled one.
+                     */
+                    modelId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description What the probe found. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIProbeResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+            /** @description The provider or the AI service answered badly. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    listAIModels: {
+        parameters: {
+            query?: {
+                providerID?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Models, with prices and capabilities. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIModelList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createAIModel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "providerId": "6f1c9d2e-6b1a-4f7a-9c3e-2b8d5a4c1e77",
+                 *       "modelId": "claude-opus-5",
+                 *       "displayName": "Claude Opus 5",
+                 *       "tiers": [
+                 *         "reasoning",
+                 *         "code"
+                 *       ],
+                 *       "priceInput": "15.00",
+                 *       "priceOutput": "75.00"
+                 *     }
+                 */
+                "application/json": components["schemas"]["CreateAIModelRequest"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIModel"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateAIModel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                modelID: components["parameters"]["ModelID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAIModelRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIModel"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteAIModel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                modelID: components["parameters"]["ModelID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description A tier assignment still uses it. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listAITiers: {
+        parameters: {
+            query?: {
+                /** @description Project assignments. Omitted returns the global ones. */
+                projectID?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The assignments at that scope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AITierAssignmentList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    assignAITier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "tier": "reasoning",
+                 *       "modelId": "3f9a2b41-6c7d-4e8f-9a1b-2c3d4e5f6a7b"
+                 *     }
+                 */
+                "application/json": components["schemas"]["AssignAITierRequest"];
+            };
+        };
+        responses: {
+            /** @description Assigned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AITierAssignment"];
+                };
+            };
+            /** @description The model cannot serve that tier, or the project is not approved for it. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "ai_model_unusable_for_tier",
+                     *       "message": "qwen2.5-coder cannot serve the vision tier. This model cannot read images, so it cannot serve the vision tier."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    unassignAITier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignmentID: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getAIBudget: {
+        parameters: {
+            query?: {
+                projectID?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The budget and current spend. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIBudget"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateAIBudget: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAIBudgetRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIBudget"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getAISpend: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                projectID?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Spend for the window. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AISpend"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRequirements: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                artifactID?: string;
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of requirements. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequirementPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listEndpoints: {
+        parameters: {
+            query?: {
+                artifactID?: string;
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every parsed endpoint. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndpointList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getRequirementCoverage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Coverage, with the uncovered requirements named. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequirementCoverage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    estimateGeneration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The projection and its assumptions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenerationEstimate"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Nothing has been ingested yet, or no model is assigned. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listTestCases: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                requirementID?: string;
+                category?: components["schemas"]["TestCategory"];
+                priority?: components["schemas"]["TestPriority"];
+                status?: components["schemas"]["TestCaseStatus"];
+                /** @description Matches the start of the title. */
+                search?: string;
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of test cases. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCasePage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createTestCase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTestCaseRequest"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCase"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    setTestCaseStatuses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description How many changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: int64 */
+                        updated: number;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getTestCase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testCaseID: components["parameters"]["TestCaseID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The test case. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCase"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteTestCase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testCaseID: components["parameters"]["TestCaseID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateTestCase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testCaseID: components["parameters"]["TestCaseID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTestCaseRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCase"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listTestFiles: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                framework?: components["schemas"]["TestFramework"];
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of files, ordered by path. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestFilePage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    exportTestFiles: {
+        parameters: {
+            query?: {
+                framework?: components["schemas"]["TestFramework"];
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A zip of the suite. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Nothing has been generated yet. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    exportPostmanCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The collection, stored as a file in the suite. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestFile"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description No approved test cases to export. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_approved_test_cases",
+                     *       "message": "No test cases are approved yet. Approve the ones you want implemented, then generate code."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getTestFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testFileID: components["parameters"]["TestFileID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file and the cases it covers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestFileContent"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    downloadTestFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testFileID: components["parameters"]["TestFileID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listFilesForTestCase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testCaseID: components["parameters"]["TestCaseID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The files covering this case. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestFileList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRuns: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                status?: components["schemas"]["RunStatus"];
+                /** @description Only runs of this kind. Absent returns every kind. */
+                type?: components["schemas"]["RunKind"];
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of runs, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    triggerRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TriggerRunRequest"];
+            };
+        };
+        responses: {
+            /** @description The run was queued. Watch its job for progress. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Run"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description The target host is not on this project's allowlist. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "target_host_not_allowed",
+                     *       "message": "Host \"prod.example.com\" is not on this project's allowlist. Add it in Settings, Project, Targets."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            /** @description No target configured, or this project already has a run in flight. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_target_configured",
+                     *       "message": "This project has no target URL, so tests cannot be executed. Generation still works. Add a target in Settings, Project."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The target could not be resolved from the runner. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "target_unresolvable",
+                     *       "message": "Host \"staging.example.com\" could not be resolved from the runner, so a run cannot reach it."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getRunTrend: {
+        parameters: {
+            query?: {
+                /** @description How far back to look. Defaults to 30 days. */
+                days?: number;
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One point per finished run, oldest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunTrend"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getProjectDashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts for the project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDashboard"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The run. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Run"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    cancelRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The cancelled run. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Run"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Already finished. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "run_not_cancelable",
+                     *       "message": "This run is passed, so it cannot be cancelled."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRunResults: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                status?: components["schemas"]["RunResultStatus"];
+            };
+            header?: never;
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of results. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunResultPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRunCommands: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The command log, in order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunCommandList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    streamRunLogs: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The id of the last event received. Sent automatically by an EventSource on reconnect. */
+                "Last-Event-ID"?: string;
+            };
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description An event stream of `log` and `status` messages. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getTestCaseHistory: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                testCaseID: components["parameters"]["TestCaseID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description This case's recent results, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseHistory"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRunAnalyses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The analyses for this run. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    analyseRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The analysis was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The run has not finished, or produced nothing to explain. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getResultAnalysis: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resultID: components["parameters"]["ResultID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The analysis. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Analysis"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    promoteResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resultID: components["parameters"]["ResultID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PromoteRequest"];
+            };
+        };
+        responses: {
+            /** @description This failure had already been promoted. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Defect"];
+                };
+            };
+            /** @description The defect was filed. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Defect"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The failure has not been analysed yet. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "analysis_not_ready",
+                     *       "message": "This failure has not been analysed yet, so there is nothing to promote. Run the analysis first."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    setAnalysisFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                analysisID: components["parameters"]["AnalysisID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackRequest"];
+            };
+        };
+        responses: {
+            /** @description The vote was recorded. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    clearAnalysisFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                analysisID: components["parameters"]["AnalysisID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The vote was removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getFeedbackByPromptVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One row per prompt version. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptFeedbackList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listDefects: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+                status?: components["schemas"]["DefectStatus"];
+                severity?: components["schemas"]["DefectSeverity"];
+                assigneeID?: string;
+                /** @description Only defects nobody owns, which is a different question from a named assignee. */
+                unassigned?: boolean;
+                testCaseID?: string;
+                includeDuplicates?: boolean;
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of defects. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefectPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createDefect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDefectRequest"];
+            };
+        };
+        responses: {
+            /** @description The defect was filed. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Defect"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The defect is not valid. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getDefect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                defectID: components["parameters"]["DefectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The defect, with its occurrences. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefectDetail"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateDefect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                defectID: components["parameters"]["DefectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDefectRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated defect. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Defect"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The change conflicts with how duplicates work. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    linkDefectDuplicate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                defectID: components["parameters"]["DefectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkDuplicateRequest"];
+            };
+        };
+        responses: {
+            /** @description The defect, linked or unlinked. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Defect"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The two defects cannot be duplicates of each other. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listDefectComments: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                defectID: components["parameters"]["DefectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The comments, oldest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefectCommentPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    commentOnDefect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                defectID: components["parameters"]["DefectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentRequest"];
+            };
+        };
+        responses: {
+            /** @description The comment was added. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefectComment"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The comment is empty. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listReports: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous response's nextCursor. Do not construct one. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of reports, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    requestReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReportRequest"];
+            };
+        };
+        responses: {
+            /** @description The report was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The format is not one this platform renders. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportID: components["parameters"]["ReportID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The report. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    downloadReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportID: components["parameters"]["ReportID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The report file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                    "application/pdf": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The report is not ready yet. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "report_not_ready",
+                     *       "message": "This report is running. It is not ready to download yet."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getRepository: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The connection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepositoryConnection"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description No repository is connected to this project. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_repository_connected",
+                     *       "message": "This project has no repository connected, so there is no source code to read. Connect one in Settings, Project, or upload an archive."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    connectRepository: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConnectRepositoryRequest"];
+            };
+        };
+        responses: {
+            /** @description The connection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepositoryConnection"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The URL or provider is not one this platform can use. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+            /** @description That provider is declared but not delivered yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    disconnectRepository: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disconnected. The stored token is left for an operator to clear deliberately. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    syncRepository: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SyncRepositoryRequest"];
+            };
+        };
+        responses: {
+            /** @description The sync was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description No repository is connected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getRepositoryMap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The newest map. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepositoryMap"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description No map has been produced for this project yet. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    mapRepository: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SyncRepositoryRequest"];
+            };
+        };
+        responses: {
+            /** @description The exploration was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description No repository is connected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getCodeCoverage: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The newest measurement. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeCoverage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Nothing has been measured for this project. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_coverage_measured",
+                     *       "message": "No code coverage has been measured for this project. Connect a repository and run a measurement."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    measureCoverage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SyncRepositoryRequest"];
+            };
+        };
+        responses: {
+            /** @description The measurement was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description No repository is connected, or it declares no coverage tool. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    generateUnitTests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["GenerateUnitTestsRequest"];
+            };
+        };
+        responses: {
+            /** @description Generation was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description No repository map exists yet. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_repository_map",
+                     *       "message": "This project has no repository map yet. Run an exploration to produce one."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The repository's test framework could not be identified. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "unknown_stack",
+                     *       "message": "This platform could not identify the repository's test framework, so it will not guess one. Set repo.stack_override for this project."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listUIFlows: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The discoveries, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UIFlowGraphList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    discoverUIFlows: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DiscoverUIFlowsRequest"];
+            };
+        };
+        responses: {
+            /** @description The discovery was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description No target is configured for this project. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_target_configured",
+                     *       "message": "This project has no target URL, so there is nothing to explore."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+            /** @description No worker has a browser available. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_browser_driver",
+                     *       "message": "No browser driver is available right now. No worker has a container runtime."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getLatestUIFlowGraph: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The newest graph. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UIFlowGraph"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description No discovery has run for this project yet. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_flow_graph",
+                     *       "message": "This project has no discovered UI flows yet. Run a discovery to produce them."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getUIFlowGraph: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flowID: components["parameters"]["FlowID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The graph, with the trail of what was clicked to find it. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UIFlowGraph"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reviewUIFlowGraph: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flowID: components["parameters"]["FlowID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The graph, now marked reviewed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UIFlowGraph"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    generateUITests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["GenerateUITestsRequest"];
+            };
+        };
+        responses: {
+            /** @description Generation was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description No discovery has run for this project yet. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_flow_graph",
+                     *       "message": "This project has no discovered UI flows yet. Run a discovery to produce them."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRunArtifacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The run's artifacts, one row per file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunArtifactList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    downloadRunArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resultID: components["parameters"]["ResultID"];
+                kind: components["schemas"]["RunArtifactKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description The result has no artifact of that kind. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listQuarantines: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                /** @description Include quarantines that have ended. The history is what says whether a fix held. */
+                includeReleased?: boolean;
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The quarantines, live ones first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuarantineList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    quarantineTest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuarantineRequest"];
+            };
+        };
+        responses: {
+            /** @description Quarantined. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quarantine"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    assignQuarantineOwner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quarantineID: components["parameters"]["QuarantineID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuarantineOwnerRequest"];
+            };
+        };
+        responses: {
+            /** @description The quarantine, now owned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quarantine"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description No live quarantine with that ID. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "quarantine_not_found",
+                     *       "message": "That quarantine does not exist, or it has already been released."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    releaseQuarantine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quarantineID: components["parameters"]["QuarantineID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["QuarantineReleaseRequest"];
+            };
+        };
+        responses: {
+            /** @description Released. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quarantine"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description No live quarantine with that ID. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listTestDataShapes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The shapes available. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestDataShapeList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    generateTestData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateTestDataRequest"];
+            };
+        };
+        responses: {
+            /** @description The generated set, or the export stream when a format was named. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestDataSet"];
+                    "text/csv": string;
+                    "application/sql": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    generateInvalidTestData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateInvalidTestDataRequest"];
+            };
+        };
+        responses: {
+            /** @description The invalid set, each record naming the constraint it breaks. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvalidTestDataSet"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listDumpTables: {
+        parameters: {
+            query: {
+                artifactID: string;
+            };
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The tables the dump declares. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DumpTableList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The artifact is not a readable schema dump. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getMockServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The mock server. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MockServer"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description This project has never started one. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_mock_server",
+                     *       "message": "This project has no mock server. Start one to get a URL a client application can point at."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    startMockServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StartMockServerRequest"];
+            };
+        };
+        responses: {
+            /** @description The start was queued. A mock needs a container, so it starts where the runtime is; poll the mock server or the job's events for its URL. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description The project's specification declares nothing to mock. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "no_mock_routes",
+                     *       "message": "This project's specification declares no endpoints, so there is nothing to mock. Upload a specification first."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            422: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+            /** @description This host cannot run a mock. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "mock_unavailable",
+                     *       "message": "A mock server cannot be started here. No container runtime is available on this host."
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    stopMockServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The stop was queued, on the host holding the container. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    startPerformanceTest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartPerformanceRequest"];
+            };
+        };
+        responses: {
+            /** @description The load test was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Performance testing is disabled, or the host needs confirmation. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            422: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getRunMetrics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The measured series. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PerformanceMetrics"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description This run has no metrics. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    startSecurityScan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectID: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StartSecurityScanRequest"];
+            };
+        };
+        responses: {
+            /** @description The scan was queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobReference"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Security testing is disabled, the host needs confirmation, or there is nothing to probe. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listRunFindings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runID: components["parameters"]["RunID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The findings, most severe first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityFindingList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listMCPServers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The configured servers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServerList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    createMCPServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MCPServerRequest"];
+            };
+        };
+        responses: {
+            /** @description Added, with no tools enabled yet. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServer"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getMCPServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverID: components["parameters"]["ServerID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The server. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServer"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    updateMCPServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverID: components["parameters"]["ServerID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MCPServerRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServer"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deleteMCPServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverID: components["parameters"]["ServerID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    testMCPServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverID: components["parameters"]["ServerID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The connection result and the tools found. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServer"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalError"];
+            /** @description The server could not be reached. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServer"];
+                };
+            };
+        };
+    };
+    listMCPCalls: {
+        parameters: {
+            query?: {
+                /** @description Page size. Every list has a hard maximum; there is no unbounded list. */
+                limit?: components["parameters"]["Limit"];
+                serverID?: string;
+                projectID?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The recorded calls. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPCallList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listIntegrations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The integration health report. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             500: components["responses"]["InternalError"];
         };
     };
