@@ -1,195 +1,21 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"io"
-	"log/slog"
 	"net/http"
-	"net/http/cookiejar"
-	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/hyscaler/qavia/api/internal/audit"
 	"github.com/hyscaler/qavia/api/internal/auth"
-	"github.com/hyscaler/qavia/api/internal/health"
 	"github.com/hyscaler/qavia/api/internal/platform/apierr"
 	"github.com/hyscaler/qavia/api/internal/platform/httpx"
 	"github.com/hyscaler/qavia/api/internal/role"
-	"github.com/hyscaler/qavia/api/internal/settings"
-	"github.com/hyscaler/qavia/api/internal/store"
 	"github.com/hyscaler/qavia/api/internal/store/dbgen"
-	"github.com/hyscaler/qavia/api/internal/store/storetest"
-	"github.com/hyscaler/qavia/api/internal/users"
 	api "github.com/hyscaler/qavia/api/openapi/gen"
 )
-
-// These are API integration tests: the real router, the real middleware chain, and a
-// real Postgres. Handlers are not unit tested separately, because the parts most
-// likely to break are the chain and the session lifecycle, and a mock of either
-// would just agree with itself (backend-standards.md 14).
-
-const testPassword = "correct-horse-battery-staple"
-
-type harness struct {
-	t        *testing.T
-	server   *httptest.Server
-	db       *store.DB
-	settings *settings.Service
-}
-
-func newHarness(t *testing.T) *harness {
-	t.Helper()
-
-	db := storetest.New(t)
-
-	previous := slog.Default()
-	slog.SetDefault(slog.New(slog.NewJSONHandler(io.Discard, nil)))
-	t.Cleanup(func() { slog.SetDefault(previous) })
-
-	sessionStore := auth.NewSessionStore(db)
-	// Secure=false: httptest serves plain HTTP, and a Secure cookie would never be
-	// sent, so every test would fail for the wrong reason.
-	// Lifetimes are settings in production. Fixed values here keep the tests
-	// independent of whatever the registry defaults happen to be.
-	manager := auth.NewSessionManager(sessionStore, false, 12*time.Hour, 2*time.Hour)
-
-	recorder := audit.NewRecorder(db)
-
-	cipher, err := settings.NewCipher([]byte("0123456789abcdef0123456789abcdef"))
-	require.NoError(t, err)
-	settingsService := settings.NewService(
-		db, settings.Default(), cipher, recorder, settings.DefaultCacheTTL)
-
-	authService := auth.NewService(db, manager, sessionStore, recorder)
-	usersService := users.NewService(db, sessionStore, recorder)
-
-	appURL, err := url.Parse("http://qavia.test")
-	require.NoError(t, err)
-
-	handler, err := newRouter(
-		&server{
-			healthAPI:   health.NewHandler(health.New("test")),
-			authAPI:     auth.NewHandler(authService, appURL),
-			usersAPI:    users.NewHandler(usersService),
-			settingsAPI: settings.NewHandler(settingsService),
-		},
-		policies(),
-		auth.SessionMiddleware(manager, authService),
-	)
-	require.NoError(t, err)
-
-	srv := httptest.NewServer(handler)
-	t.Cleanup(srv.Close)
-
-	return &harness{t: t, server: srv, db: db, settings: settingsService}
-}
-
-// client returns an HTTP client with its own cookie jar, so two clients are two
-// independent browsers.
-func (h *harness) client() *http.Client {
-	h.t.Helper()
-
-	jar, err := cookiejar.New(nil)
-	require.NoError(h.t, err)
-	return &http.Client{Jar: jar}
-}
-
-// seedUser creates a user with a usable password, bypassing the invitation flow.
-func (h *harness) seedUser(email string, r role.Role) dbgen.User {
-	h.t.Helper()
-
-	hashed, err := auth.HashPassword(testPassword, auth.HashParams{
-		Memory: 8 * 1024, Iterations: 1, Parallelism: 1, SaltLength: 16, KeyLength: 32,
-	})
-	require.NoError(h.t, err)
-
-	ctx := context.Background()
-	user, err := h.db.Queries().CreateUser(ctx, dbgen.CreateUserParams{
-		Email: email, Name: email, Role: dbgen.UserRole(r), Timezone: "UTC",
-	})
-	require.NoError(h.t, err)
-
-	require.NoError(h.t, h.db.Queries().SetUserPassword(ctx, dbgen.SetUserPasswordParams{
-		ID: user.ID, PasswordHash: &hashed,
-	}))
-	user.PasswordHash = &hashed
-	return user
-}
-
-// apiResponse is a fully read response.
-//
-// The body is buffered once, so a test can assert on the status and then decode the
-// same response. Passing an http.Response around invites reading the body twice,
-// which silently yields nothing the second time.
-type apiResponse struct {
-	StatusCode int
-	Header     http.Header
-	Cookies    []*http.Cookie
-	Body       []byte
-}
-
-func (r apiResponse) Text() string { return string(r.Body) }
-
-func (h *harness) do(client *http.Client, method, path string, body any) apiResponse {
-	h.t.Helper()
-
-	var reader io.Reader
-	if body != nil {
-		encoded, err := json.Marshal(body)
-		require.NoError(h.t, err)
-		reader = bytes.NewReader(encoded)
-	}
-
-	req, err := http.NewRequestWithContext(context.Background(), method, h.server.URL+path, reader)
-	require.NoError(h.t, err)
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	resp, err := client.Do(req)
-	require.NoError(h.t, err)
-	defer func() { require.NoError(h.t, resp.Body.Close()) }()
-
-	raw, err := io.ReadAll(resp.Body)
-	require.NoError(h.t, err)
-
-	return apiResponse{
-		StatusCode: resp.StatusCode,
-		Header:     resp.Header,
-		Cookies:    resp.Cookies(),
-		Body:       raw,
-	}
-}
-
-func (h *harness) login(client *http.Client, email string) apiResponse {
-	return h.do(client, http.MethodPost, "/api/v1/auth/login",
-		map[string]string{"email": email, "password": testPassword})
-}
-
-// signedIn returns a client already holding a session for a seeded user.
-func (h *harness) signedIn(email string, r role.Role) *http.Client {
-	h.t.Helper()
-
-	h.seedUser(email, r)
-	client := h.client()
-	resp := h.login(client, email)
-	require.Equal(h.t, http.StatusOK, resp.StatusCode, resp.Text())
-	return client
-}
-
-func decode[T any](t *testing.T, resp apiResponse) T {
-	t.Helper()
-
-	var out T
-	require.NoError(t, json.Unmarshal(resp.Body, &out), resp.Text())
-	return out
-}
 
 func TestLoginLifecycle(t *testing.T) {
 	h := newHarness(t)

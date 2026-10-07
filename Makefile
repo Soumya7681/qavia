@@ -122,6 +122,11 @@ test: test-go test-python test-web ## Run every test suite
 test-go: ## Go tests with the race detector. Not optional (tech-stack.md 13)
 	cd $(API_DIR) && go test -race ./...
 
+.PHONY: cover
+cover: ## Go tests with a coverage report. Informational, not a gate
+	cd $(API_DIR) && go test -race -covermode=atomic -coverprofile=coverage.out ./... && \
+		go tool cover -func=coverage.out | tail -n 1
+
 .PHONY: test-short
 test-short: ## Go tests, skipping the container-backed integration suites
 	cd $(API_DIR) && go test -race -short ./...

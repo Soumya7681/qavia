@@ -77,9 +77,31 @@ jobs:
       # testcontainers, so no service containers are declared here. The race
       # detector is not optional: the API drives containers, fans out SSE, and
       # runs bounded worker pools (tech-stack.md 13).
+      # The standing tests (secret leakage, zero-integration acceptance, job
+      # idempotency) run here as part of the suite: a planted secret in any
+      # response or log line fails this step (BE-0.29).
       - name: go test -race
         working-directory: api
-        run: go test -race ./...
+        run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
+      # Informational, not a gate: a coverage number as a merge condition gets
+      # gamed with tests that execute lines and assert nothing.
+      - name: coverage summary
+        if: always()
+        working-directory: api
+        run: |
+          [ -f coverage.out ] || exit 0
+          {
+            echo "### Go coverage"
+            echo '```'
+            go tool cover -func=coverage.out | tail -n 1
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: go-coverage
+          path: api/coverage.out
+          if-no-files-found: ignore
 
   # Every migration must apply and roll back. A Down that was never run is not a
   # rollback plan (backend-standards.md 9).

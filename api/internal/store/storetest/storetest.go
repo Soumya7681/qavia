@@ -8,6 +8,7 @@ package storetest
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -19,25 +20,6 @@ import (
 
 	"github.com/hyscaler/qavia/api/internal/store"
 )
-
-// Tables truncated between tests, children first so foreign keys do not object.
-// A new table added without a line here will leak rows into the next test.
-var tables = []string{
-	"audit_log",
-	"notifications",
-	"job_events",
-	"jobs",
-	"artifacts",
-	"project_members",
-	"projects",
-	"settings_audit",
-	"settings",
-	"account_locks",
-	"login_attempts",
-	"sessions",
-	"user_invitations",
-	"users",
-}
 
 type shared struct {
 	url string
@@ -76,16 +58,43 @@ func New(t *testing.T) *store.DB {
 	return db
 }
 
+// URL returns the connection string of the shared, migrated, empty database, for
+// a test that opens its own pool the way a process does at boot.
+func URL(t *testing.T) string {
+	t.Helper()
+
+	New(t)
+	return container.url
+}
+
 // Truncate empties every table. Called by New, and available to a test that wants
 // a clean slate mid-way.
+//
+// The table list is read from the catalog rather than kept by hand. A hand-kept
+// list went stale the first time a phase added a table without a line here, and a
+// stale list leaks rows from one test into the next, which surfaces as a flaky
+// failure in a test that did nothing wrong. One statement with every table also
+// lets Postgres order the foreign keys itself.
 func Truncate(t *testing.T, db *store.DB) {
 	t.Helper()
 
 	ctx := context.Background()
-	for _, table := range tables {
-		_, err := db.Pool().Exec(ctx, "TRUNCATE TABLE "+table+" CASCADE")
-		require.NoError(t, err, "truncate %s", table)
+	var tables []string
+	rows, err := db.Pool().Query(ctx, `
+		SELECT quote_ident(tablename) FROM pg_tables
+		WHERE schemaname = 'public' AND tablename <> 'goose_db_version'
+		ORDER BY tablename`)
+	require.NoError(t, err)
+	for rows.Next() {
+		var name string
+		require.NoError(t, rows.Scan(&name))
+		tables = append(tables, name)
 	}
+	require.NoError(t, rows.Err())
+	require.NotEmpty(t, tables, "no tables found: were the migrations applied?")
+
+	_, err = db.Pool().Exec(ctx, "TRUNCATE TABLE "+strings.Join(tables, ", ")+" RESTART IDENTITY CASCADE")
+	require.NoError(t, err, "truncate")
 }
 
 func start() *shared {

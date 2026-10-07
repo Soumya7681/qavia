@@ -195,16 +195,62 @@ func run(ctx context.Context) error {
 
 	logger.InfoContext(ctx, "starting api", "version", version, "config", cfg)
 
-	db, err := store.Open(ctx, store.Options{DatabaseURL: cfg.DatabaseURL})
+	built, err := build(ctx, cfg, logger, logLevel)
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer built.close()
+
+	return serve(ctx, logger, cfg, built.handler)
+}
+
+// app is the assembled API process: the handler plus what has to be released when
+// it stops.
+//
+// It exists so the integration tests build exactly what main builds. A test
+// harness that wires its own subset of handlers drifts from production one
+// constructor at a time, and the standing tests (BE-0.29) are only worth having if
+// they run against the real thing.
+type app struct {
+	handler  http.Handler
+	db       *store.DB
+	settings *settings.Service
+
+	closers []func()
+}
+
+func (a *app) onClose(fn func()) { a.closers = append(a.closers, fn) }
+
+// close releases everything in reverse order of acquisition, the same order the
+// defers it replaced ran in.
+func (a *app) close() {
+	for i := len(a.closers) - 1; i >= 0; i-- {
+		a.closers[i]()
+	}
+	a.closers = nil
+}
+
+// build wires every dependency and returns the handler. On error, whatever was
+// already acquired is released before returning.
+func build(ctx context.Context, cfg config.Config, logger *slog.Logger, logLevel *slog.LevelVar) (_ *app, err error) {
+	a := &app{}
+	defer func() {
+		if err != nil {
+			a.close()
+		}
+	}()
+
+	db, err := store.Open(ctx, store.Options{DatabaseURL: cfg.DatabaseURL})
+	if err != nil {
+		return nil, err
+	}
+	a.onClose(db.Close)
+	a.db = db
 
 	// Migrations are embedded, so a deploy carries the schema it needs and there
 	// is no separate migration step to forget.
 	if err := store.Migrate(ctx, db); err != nil {
-		return err
+		return nil, err
 	}
 
 	recorder := audit.NewRecorder(db)
@@ -213,17 +259,18 @@ func run(ctx context.Context) error {
 	// the UI, so it is built early and passed to whatever needs a configurable value.
 	cipher, err := settings.NewCipher(cfg.EncryptionKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	settingsService := settings.NewService(
 		db, settings.Default(), cipher, recorder, settings.DefaultCacheTTL)
+	a.settings = settingsService
 
 	// The API and the worker are separate processes, so cache invalidation crosses
 	// process boundaries over Postgres LISTEN/NOTIFY. Without this listener a
 	// setting changed in one process would stay stale in the other until its TTL
 	// expired.
 	listenerCtx, stopListener := context.WithCancel(ctx)
-	defer stopListener()
+	a.onClose(stopListener)
 	go func() {
 		if err := settingsService.Listen(listenerCtx); err != nil {
 			logger.ErrorContext(ctx, "settings invalidation listener stopped", "error", err)
@@ -243,11 +290,11 @@ func run(ctx context.Context) error {
 
 	traceExporter, err := settingsService.String(ctx, "observability.trace_exporter", global)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	otlpEndpoint, err := settingsService.String(ctx, "observability.otlp_endpoint", global)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	shutdownTracing, err := observability.Setup(ctx, observability.Options{
@@ -259,25 +306,25 @@ func run(ctx context.Context) error {
 		SampleRatio:    1,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer func() {
+	a.onClose(func() {
 		shutdownCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 		defer cancel()
 		if err := shutdownTracing(shutdownCtx); err != nil {
 			logger.WarnContext(ctx, "flush traces", "error", err)
 		}
-	}()
+	})
 
 	// Sessions are server-side, in the same Postgres as everything else, so
 	// revoking access is a DELETE rather than waiting out a token.
 	sessionLifetime, err := settingsService.Duration(ctx, "security.session_lifetime", global)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	sessionIdleTimeout, err := settingsService.Duration(ctx, "security.session_idle_timeout", global)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sessionStore := auth.NewSessionStore(db)
@@ -297,7 +344,7 @@ func run(ctx context.Context) error {
 	// a vendor name (backend-standards.md 7).
 	objects, err := objectstore.FromSettings(ctx, settingsService)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	notifiers := notifier.NewRegistry()
@@ -323,7 +370,7 @@ func run(ctx context.Context) error {
 	// which is why there is a second binary.
 	redisOptions, err := jobs.RedisOptions(cfg.RedisURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// The AI layer. The gateway is the only path from Go into a model: it resolves
@@ -331,16 +378,16 @@ func run(ctx context.Context) error {
 	// writes the one llm_calls row afterwards.
 	aiServiceURL, err := settingsService.String(ctx, "ai.service_url", global)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	aiTimeout, err := settingsService.Duration(ctx, "ai.request_timeout", global)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	aiClient, err := llm.NewClient(aiServiceURL, aiTimeout)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	aiGateway := llm.NewGateway(db, aiClient, cipher, settingsService, projectsService)
 	aiService := llm.NewService(db, cipher, aiGateway, aiClient, recorder)
@@ -373,11 +420,11 @@ func run(ctx context.Context) error {
 	}()
 
 	jobClient := jobs.NewClient(db, redisOptions, jobRegistry, settingsService, hub)
-	defer func() {
+	a.onClose(func() {
 		if err := jobClient.Close(); err != nil {
 			logger.WarnContext(ctx, "close queue client", "error", err)
 		}
-	}()
+	})
 
 	jobsService := jobs.NewService(jobClient, projectsService, recorder, llm.NewGuard(aiGateway))
 
@@ -429,13 +476,13 @@ func run(ctx context.Context) error {
 
 	redisClient, err := jobs.RedisClient(cfg.RedisURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer func() {
+	a.onClose(func() {
 		if err := redisClient.Close(); err != nil {
 			logger.WarnContext(ctx, "close redis client", "error", err)
 		}
-	}()
+	})
 
 	triggers := runtrigger.NewRegistry()
 	triggers.Register(runtrigger.NewManual())
@@ -536,10 +583,11 @@ func run(ctx context.Context) error {
 		projects.RequireMembership(projectsService),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return serve(ctx, logger, cfg, handler)
+	a.handler = handler
+	return a, nil
 }
 
 func serve(ctx context.Context, logger *slog.Logger, cfg config.Config, handler http.Handler) error {
