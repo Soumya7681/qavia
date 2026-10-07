@@ -32,16 +32,11 @@ const (
 // with the reason attached rather than hidden, so the UI disables the option and
 // says when it arrives instead of pretending it does not exist (F-3.12). Landing a
 // phase means deleting one line here.
-var unavailableReason = map[TestType]string{
-	TestTypeTestCases:   "Test case generation arrives in phase 2.",
-	TestTypeAPITests:    "API test generation arrives in phase 3.",
-	TestTypeUnitTests:   "Unit test generation arrives in phase 6.",
-	TestTypeUITests:     "UI test generation arrives in phase 7.",
-	TestTypePerformance: "Performance testing arrives in phase 9.",
-	TestTypeSecurity:    "Security testing arrives in phase 9.",
-	TestTypeTestData:    "Test data generation arrives in phase 8.",
-	TestTypeMockServer:  "The mock server arrives in phase 8.",
-}
+//
+// Empty: every type in AllTestTypes is implemented. Phases 2 to 9 landed without
+// their lines being deleted, which left every project reporting every type as
+// unavailable; the entries were removed together once that was noticed.
+var unavailableReason = map[TestType]string{}
 
 // AllTestTypes is every selectable type, in the order a form should show them.
 var AllTestTypes = []TestType{
