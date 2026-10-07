@@ -12,12 +12,15 @@ WEB_DIR     := web
 AI_DIR      := services/ai
 COMPOSE     := docker compose -f infra/docker/compose.yaml
 
+export PATH := $(shell go env GOPATH)/bin:$(HOME)/go/bin:$(PATH)
+
 # Loaded so migrate/test targets see DATABASE_URL without exporting by hand.
 ifneq (,$(wildcard .env))
 include .env
 export
 endif
 
+GOOSE       := $(shell command -v goose 2>/dev/null || (test -x $(HOME)/go/bin/goose && echo $(HOME)/go/bin/goose) || echo goose)
 GOOSE_DRIVER := postgres
 
 .PHONY: help
@@ -28,8 +31,12 @@ help: ## Show this help
 # ---------------------------------------------------------------- environment
 
 .PHONY: up
-up: ## Start Postgres, Redis, and MinIO
-	$(COMPOSE) up -d --wait
+up: ## Start Postgres, Redis, and MinIO if not already running
+	@if (cd $(API_DIR) && GOOSE_DRIVER=$(GOOSE_DRIVER) GOOSE_DBSTRING="$(DATABASE_URL)" $(GOOSE) -dir migrations status >/dev/null 2>&1); then \
+		echo "PostgreSQL is already accessible; skipping container startup"; \
+	else \
+		$(COMPOSE) up -d --wait; \
+	fi
 
 .PHONY: down
 down: ## Stop the local stack
@@ -40,12 +47,13 @@ reset: ## Stop the local stack and delete its data
 	$(COMPOSE) down -v
 
 .PHONY: dev
-dev: up migrate-up ## Start the stack, migrate, and run the API, worker, and AI service
-	@echo "starting api, worker, and ai service; ctrl-c to stop"
+dev: up migrate-up ## Start the stack, migrate, and run the API, worker, AI service, and web frontend in one command
+	@echo "Starting API (:8080), worker, AI service (:8000), and web frontend (:3000); ctrl-c to stop"
 	@trap 'kill 0' EXIT; \
 	 ( cd $(API_DIR) && go run ./cmd/api ) & \
 	 ( cd $(API_DIR) && go run ./cmd/worker ) & \
 	 ( cd $(AI_DIR) && uv run uvicorn src.main:app --port 8000 ) & \
+	 ( cd $(WEB_DIR) && PORT=3000 pnpm dev ) & \
 	 wait
 
 # ---------------------------------------------------------------- generation
@@ -81,19 +89,19 @@ gen-web: ## Regenerate the TypeScript client from the same spec (FE-S.3)
 
 .PHONY: migrate-up
 migrate-up: ## Apply all migrations
-	cd $(API_DIR) && goose -dir migrations $(GOOSE_DRIVER) "$(DATABASE_URL)" up
+	cd $(API_DIR) && GOOSE_DRIVER=$(GOOSE_DRIVER) GOOSE_DBSTRING="$(DATABASE_URL)" $(GOOSE) -dir migrations up
 
 .PHONY: migrate-down
 migrate-down: ## Roll back one migration
-	cd $(API_DIR) && goose -dir migrations $(GOOSE_DRIVER) "$(DATABASE_URL)" down
+	cd $(API_DIR) && GOOSE_DRIVER=$(GOOSE_DRIVER) GOOSE_DBSTRING="$(DATABASE_URL)" $(GOOSE) -dir migrations down
 
 .PHONY: migrate-status
 migrate-status: ## Show migration status
-	cd $(API_DIR) && goose -dir migrations $(GOOSE_DRIVER) "$(DATABASE_URL)" status
+	cd $(API_DIR) && GOOSE_DRIVER=$(GOOSE_DRIVER) GOOSE_DBSTRING="$(DATABASE_URL)" $(GOOSE) -dir migrations status
 
 .PHONY: migrate-new
 migrate-new: ## Create a migration: make migrate-new name=add_widgets
-	cd $(API_DIR) && goose -dir migrations create $(name) sql
+	cd $(API_DIR) && $(GOOSE) -dir migrations create $(name) sql
 
 # Local Postgres runs in compose, so psql and pg_dump come from the container by
 # default; a host client older than the server refuses to dump. CI installs a
