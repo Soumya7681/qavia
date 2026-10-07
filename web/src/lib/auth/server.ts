@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies, headers } from "next/headers";
+import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
@@ -22,6 +23,9 @@ import type { CurrentUser } from "./roles";
  * one thread through the API's logs.
  */
 export const serverApi = cache(async () => {
+  // Every API call is request-time work (it acts as this user, and the client
+  // draws a random request ID), so say so before anything else happens.
+  await connection();
   const [jar, incoming] = await Promise.all([cookies(), headers()]);
   const session = jar.get(SESSION_COOKIE)?.value;
 

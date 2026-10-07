@@ -64,7 +64,9 @@ export function createApiClient({ baseUrl = "", headers, fetch }: ApiClientOptio
     baseUrl,
     headers,
     credentials: "same-origin",
-    ...(fetch ? { fetch } : {}),
+    // Looked up per call rather than captured once, so anything that wraps the
+    // global fetch after this module loads (instrumentation, test mocks) is honoured.
+    fetch: (request: Request) => (fetch ?? globalThis.fetch)(request),
   });
   client.use(correlation, errors);
   return client;
@@ -72,8 +74,14 @@ export function createApiClient({ baseUrl = "", headers, fetch }: ApiClientOptio
 
 export type ApiClient = ReturnType<typeof createApiClient>;
 
-/** The browser client. */
-export const apiClient = createApiClient();
+/**
+ * The browser client. Its base is the page's own origin, which is what a relative
+ * URL would resolve to anyway; spelling it out keeps the client usable where
+ * `Request` will not resolve a relative URL (tests, workers).
+ */
+export const apiClient = createApiClient({
+  baseUrl: typeof window === "undefined" ? "" : window.location.origin,
+});
 
 /**
  * Typed TanStack Query hooks over the browser client:

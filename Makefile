@@ -165,13 +165,17 @@ tidy: ## go mod tidy. CI fails on a diff
 seed: ## Seed the demo project (BE-X.2)
 	cd $(API_DIR) && go run ./cmd/seed
 
+.PHONY: e2e-web
+e2e-web: ## Playwright end to end against the mock (starts both servers itself)
+	cd $(WEB_DIR) && pnpm e2e
+
 .PHONY: web-mock
 web-mock: ## Run the web app against `make mock` (start that first)
 	cd $(WEB_DIR) && pnpm dev:mock
 
 .PHONY: mock
 mock: ## Serve the OpenAPI contract as a mock API (BE-X.3)
-	npx --yes @stoplight/prism-cli mock $(API_DIR)/openapi/qavia.yaml --port 4010
+	cd $(WEB_DIR) && pnpm mock
 
 .PHONY: rotate-key
 rotate-key: ## Re-encrypt every stored secret under a new key. Run with both processes stopped

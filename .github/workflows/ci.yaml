@@ -182,3 +182,30 @@ jobs:
       # The build is the check that the rewrite config, route groups, and server
       # components hold together, which neither lint nor tsc can see.
       - run: pnpm build
+
+  # End to end against the Prism mock of qavia.yaml, so no backend is needed and
+  # a screen cannot pass against an API shape the contract does not describe.
+  e2e-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          if-no-files-found: ignore

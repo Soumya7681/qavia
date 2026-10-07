@@ -4,7 +4,7 @@ import { createContext, useContext } from "react";
 
 import { type CurrentUser, hasRole, type Role } from "@/lib/auth/roles";
 
-const CurrentUserContext = createContext<CurrentUser | null>(null);
+export const CurrentUserContext = createContext<CurrentUser | null>(null);
 
 /** Set once by the (app) layout from the server's `GET /me`. */
 export function CurrentUserProvider({
